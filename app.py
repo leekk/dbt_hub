@@ -1,5 +1,8 @@
 import streamlit as st
 import openai
+import time
+from openai.error import RateLimitError
+
 
 # Load API key from Streamlit secrets
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -35,11 +38,15 @@ if user_input:
         st.markdown(user_input)
 
     # Send to OpenAI
+try:
     response = openai.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=st.session_state.messages,
-    temperature=0.7,
-)
+        model="gpt-3.5-turbo",
+        messages=st.session_state.messages,
+        temperature=0.7,
+    )
+except RateLimitError:
+    st.error("Rate limit reached. Waiting a bit before trying again...")
+    time.sleep(10)
 
     reply = response.choices[0].message.content
     st.session_state.messages.append({"role": "assistant", "content": reply})
