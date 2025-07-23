@@ -1,7 +1,7 @@
 import streamlit as st
 import openai
 import time
-from openai.error import RateLimitError
+from openai import RateLimitError
 
 
 # Load API key from Streamlit secrets
