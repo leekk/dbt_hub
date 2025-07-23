@@ -36,7 +36,7 @@ if user_input:
 
     # Send to OpenAI
     response = openai.chat.completions.create(
-    model="gpt-4o",
+    model="gpt-3.5-turbo",
     messages=st.session_state.messages,
     temperature=0.7,
 )
