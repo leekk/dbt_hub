@@ -35,11 +35,11 @@ if user_input:
         st.markdown(user_input)
 
     # Send to OpenAI
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=st.session_state.messages,
-        temperature=0.7,
-    )
+    response = openai.chat.completions.create(
+    model="gpt-4",
+    messages=st.session_state.messages,
+    temperature=0.7,
+)
 
     reply = response["choices"][0]["message"]["content"]
     st.session_state.messages.append({"role": "assistant", "content": reply})
