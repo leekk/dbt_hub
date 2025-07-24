@@ -1,6 +1,16 @@
 import streamlit as st
 from huggingface_hub import InferenceClient
 
+API_TOKEN = st.secrets["HF_API_TOKEN"]
+st.write("Token starts with hf_:", API_TOKEN.startswith("hf_"))
+
+client = InferenceClient(model="HuggingFaceTB/SmolLM3-3B", token=API_TOKEN)
+response = client.text_generation("Hello", max_new_tokens=10)
+st.write(response)
+
+"""import streamlit as st
+from huggingface_hub import InferenceClient
+
 # Replace with your real Hugging Face API token (keep it secret!)
 API_TOKEN = st.secrets["HF_API_TOKEN"]
 
@@ -45,4 +55,4 @@ for msg in st.session_state.messages:
     if msg["role"] == "user":
         st.markdown(f"**You:** {msg['content']}")
     else:
-        st.markdown(f"**Bot:** {msg['content']}")
+        st.markdown(f"**Bot:** {msg['content']}")"""
