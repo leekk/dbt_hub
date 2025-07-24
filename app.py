@@ -1,44 +1,66 @@
 import streamlit as st
 import requests
 
-# Hugging Face settings
-API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1"
-headers = {"Authorization": f"Bearer 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"}
+# Hugging Face model and your API token
+API_URL = "https://api-inference.huggingface.co/models/google/flan-t5-small"
+API_TOKEN = "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"  # 🔁 Replace with your token
 
-def query(payload):
-    response = requests.post(API_URL, headers=headers, json=payload)
-    return response.json()
+headers = {"Authorization": f"Bearer {API_TOKEN}"}
 
-st.set_page_config(page_title="DBT Chatbot", page_icon="💬")
+def query_hf(payload):
+    try:
+        response = requests.post(API_URL, headers=headers, json=payload)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        return {"error": str(e)}
 
-st.title("💬 DBT Chatbot")
-st.write("A supportive AI to help you practice DBT skills.")
+# Title
+st.title("🧠 DBT Skills Chatbot")
 
-# Chat history
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+# Initialize chat history
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# User input
+# Input box
 user_input = st.text_input("You:", key="input")
 
 if user_input:
-    st.session_state.chat_history.append(("You", user_input))
+    st.session_state.messages.append({"role": "user", "content": user_input})
 
-    prompt = f"""
-    You are a compassionate DBT therapist. Respond to the user with helpful DBT skills, based on the following message:
+    # Format prompt
+    prompt = (
+        "You are a supportive therapist who teaches Dialectical Behavior Therapy (DBT) skills "
+        "in a friendly, conversational tone. Help the user understand DBT one step at a time.\n\n"
+        f"User: {user_input}\nAssistant:"
+    )
 
-    {user_input}
-    """
+    # Query model
+    output = query_hf({
+        "inputs": prompt,
+        "parameters": {"max_new_tokens": 150}
+    })
 
-    with st.spinner("Thinking..."):
-        output = query({
-            "inputs": prompt,
-            "parameters": {"max_new_tokens": 150}
-        })
+    # Debug: Show raw output (optional)
+    # st.write("Raw output:", output)
 
-        bot_reply = output[0]["generated_text"].split(":", 1)[-1].strip()
-        st.session_state.chat_history.append(("DBT-Bot", bot_reply))
+    # Handle response safely
+    try:
+        if isinstance(output, list) and "generated_text" in output[0]:
+            bot_reply = output[0]["generated_text"].split("Assistant:", 1)[-1].strip()
+        elif isinstance(output, dict) and "error" in output:
+            bot_reply = f"⚠️ API error: {output['error']}"
+        else:
+            bot_reply = "🤖 Sorry, I didn't get a valid response."
+    except Exception as e:
+        bot_reply = f"⚠️ Unexpected error: {e}"
 
-# Display chat
-for sender, msg in st.session_state.chat_history:
-    st.markdown(f"**{sender}:** {msg}")
+    # Save bot response
+    st.session_state.messages.append({"role": "bot", "content": bot_reply})
+
+# Display chat messages
+for msg in st.session_state.messages:
+    if msg["role"] == "user":
+        st.markdown(f"**You:** {msg['content']}")
+    else:
+        st.markdown(f"**Bot:** {msg['content']}")
