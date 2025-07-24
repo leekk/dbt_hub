@@ -73,8 +73,8 @@ st.markdown("""
         background-color: #FFA500;
     }
     .stButton button {
-        background: #f0f7ff !important;
-        border: 1px solid #d0e0ff !important;
+        background: #FFA500 !important;
+        border: 1px solid #C76E00 !important;
     }
 </style>
 """, unsafe_allow_html=True)
