@@ -11,10 +11,13 @@ user_input = st.text_input("Enter prompt:")
 
 if user_input:
     try:
-        outputs = client.text_generation(user_input, max_new_tokens=50)
-        st.write("Response:", outputs[0]['generated_text'])
-    except Exception as e:
-        st.error(f"API error: {e}")
+    outputs = client.text_generation(prompt, max_new_tokens=150)
+    if outputs and isinstance(outputs, list):
+        bot_reply = outputs[0]["generated_text"].strip()
+    else:
+        bot_reply = "🤖 Sorry, I didn't get a valid response."
+except Exception as e:
+    bot_reply = f"⚠️ API error: {str(e)}"
 
 """import streamlit as st
 from huggingface_hub import InferenceClient
