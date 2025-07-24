@@ -1,55 +1,44 @@
 import streamlit as st
-import openai
-import time
-from openai import RateLimitError
+import requests
 
+# Hugging Face settings
+API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1"
+headers = {"Authorization": f"Bearer YOUR_HUGGINGFACE_API_TOKEN"}
 
-# Load API key from Streamlit secrets
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+def query(payload):
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response.json()
 
-st.set_page_config(page_title="DBT Check the Facts", page_icon="🧠")
-st.title("🧠 DBT: Check the Facts Chatbot")
+st.set_page_config(page_title="DBT Chatbot", page_icon="💬")
 
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "system", "content": (
-            "You are a supportive Dialectical Behavior Therapy (DBT) coach helping the user regulate emotions "
-            "using the skill 'Check the Facts'. Ask them step-by-step:\n"
-            "1. What emotion they’re feeling,\n"
-            "2. What event triggered it,\n"
-            "3. What thoughts they had about it,\n"
-            "4. Whether those thoughts are supported by evidence or might have alternative explanations,\n"
-            "5. Whether their emotional reaction fits the facts and intensity of the event.\n"
-            "Stay warm, brief, and non-judgmental. Offer encouragement and positive reinforcement at the end."
-        )}
-    ]
+st.title("💬 DBT Chatbot")
+st.write("A supportive AI to help you practice DBT skills.")
 
-# Display chat messages
-for msg in st.session_state.messages:
-    if msg["role"] != "system":
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+# Chat history
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
-# Chat input
-user_input = st.chat_input("How are you feeling right now?")
+# User input
+user_input = st.text_input("You:", key="input")
+
 if user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.markdown(user_input)
+    st.session_state.chat_history.append(("You", user_input))
 
-    # Send to OpenAI
-try:
-    response = openai.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=st.session_state.messages,
-        temperature=0.7,
-    )
-except RateLimitError:
-    st.error("Rate limit reached. Waiting a bit before trying again...")
-    time.sleep(10)
+    prompt = f"""
+    You are a compassionate DBT therapist. Respond to the user with helpful DBT skills, based on the following message:
 
-    reply = response.choices[0].message.content
-    st.session_state.messages.append({"role": "assistant", "content": reply})
+    {user_input}
+    """
 
-    with st.chat_message("assistant"):
-        st.markdown(reply)
+    with st.spinner("Thinking..."):
+        output = query({
+            "inputs": prompt,
+            "parameters": {"max_new_tokens": 150}
+        })
+
+        bot_reply = output[0]["generated_text"].split(":", 1)[-1].strip()
+        st.session_state.chat_history.append(("DBT-Bot", bot_reply))
+
+# Display chat
+for sender, msg in st.session_state.chat_history:
+    st.markdown(f"**{sender}:** {msg}")
