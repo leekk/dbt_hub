@@ -92,9 +92,10 @@ if cols[0].button("I want to learn"):
     st.session_state.messages.append({"role": "assistant", "content": """Do you know what you would like to learn? 
 I can briefly review any area that interets you, just give me the keywords!"""})
 if cols[1].button("I want to talk"):
-    st.session_state.messages.append({"role": "user", "content": "Mindfulness"})
+    st.session_state.messages.append({"role": "user", "content": """Go ahead, let me know if you would like advice, 
+    some skills, a quick solution or simply a friendly ear!"""})
 if cols[2].button("I don't want to solve my problem but I should probably be solving my problem rn"):
-    st.session_state.messages.append({"role": "user", "content": "Emotion regulation"})
+    st.session_state.messages.append({"role": "user", "content": """it do be like that"""})
 
 # User input
 if prompt := st.chat_input("Ask about DBT skills..."):
