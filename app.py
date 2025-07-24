@@ -89,7 +89,8 @@ for msg in st.session_state.messages:
 
 cols = st.columns(3)
 if cols[0].button("I want to learn"):
-    st.session_state.messages.append({"role": "assistant", "content": "Do you know what you would like to learn? I can briefly review any area that interets you, just give me the keywords!"})
+    st.session_state.messages.append({"role": "assistant", "content": """Do you know what you would like to learn? 
+I can briefly review any area that interets you, just give me the keywords!"""})
 if cols[1].button("I want to talk"):
     st.session_state.messages.append({"role": "user", "content": "Mindfulness"})
 if cols[2].button("I don't want to solve my problem but I should probably be solving my problem rn"):
