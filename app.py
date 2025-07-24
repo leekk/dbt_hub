@@ -79,6 +79,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+page_bg_color = """
+<style>
+[data-testid="stAppViewContainer"] > .main {
+    background-color: #ADD8E6; /* Light blue example */
+}
+</style>
+"""
+st.markdown(page_bg_color, unsafe_allow_html=True)
+
 # initializing chat
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "assistant", "content": "Hi there!"}]
