@@ -2,7 +2,7 @@ import streamlit as st
 from huggingface_hub import InferenceClient
 
 # Replace with your real Hugging Face API token (keep it secret!)
-API_TOKEN = "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"
+API_TOKEN = st.secrets["HF_API_TOKEN"]
 
 # Initialize the Hugging Face Inference client for SmolLM3-3B
 client = InferenceClient(model="HuggingFaceTB/SmolLM3-3B", token=API_TOKEN)
