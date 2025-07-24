@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from difflib import get_close_matches
 
-# ====== ENHANCED DBT SKILLS DATABASE ======
+# DBT DATABASE
 DBT_SKILLS = {
     "distress": {
         "keywords": ["overwhelmed", "panic", "crisis", "tipp", "stress"],
@@ -19,9 +19,13 @@ DBT_SKILLS = {
 2. 📝 **Describe** - Put words to your experience
 3. 🎯 **Participate** - Fully engage in the moment"""
     }
+    "dysphoric": {
+        "keywords": ["sad", "upset", "miserable", "down"], 
+        "response": """it's normal to feel this way. Would you like to go through your feelings together?"""
+    }
 }
 
-# ====== CONVERSATIONAL AI RESPONSE ======
+# CONVERSATIONAL RESPONSES
 def get_dbt_response(user_input):
     user_input = user_input.lower()
     
@@ -55,7 +59,7 @@ def get_dbt_response(user_input):
     except:
         return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance!"
 
-# ====== STREAMLIT UI (WITH YOUR LOVED FORMATTING) ======
+# BELOW IS THE UI
 st.set_page_config(page_title="Therapy Hub", page_icon="🐀")
 
 # Custom styling
@@ -85,11 +89,11 @@ for msg in st.session_state.messages:
 
 # Skill buttons (your favorite feature!)
 cols = st.columns(3)
-if cols[0].button("🚨 Crisis Help"):
+if cols[0].button("I want to learn"):
     st.session_state.messages.append({"role": "user", "content": "TIPP skills"})
-if cols[1].button("🧠 Mindfulness"):
+if cols[1].button("I want to talk"):
     st.session_state.messages.append({"role": "user", "content": "Mindfulness"})
-if cols[2].button("😊 Emotion Help"):
+if cols[2].button("I don't want to solve my problem but I should probably be solving my problem rn"):
     st.session_state.messages.append({"role": "user", "content": "Emotion regulation"})
 
 # User input
