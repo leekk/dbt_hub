@@ -63,21 +63,21 @@ def get_dbt_response(user_input):
 st.set_page_config(page_title="Therapy Hub", page_icon="🐀")
 
 # Custom styling
-"""st.markdown("""
+st.markdown("""
 <style>
     [data-testid="stChatMessage"] {
         padding: 15px;
         border-radius: 12px;
     }
     [data-testid="stChatMessage"][aria-label*="assistant"] {
-        background-color: #f0f7ff;
+        background-color: #FFA500;
     }
     .stButton button {
         background: #f0f7ff !important;
         border: 1px solid #d0e0ff !important;
     }
 </style>
-""", unsafe_allow_html=True)"""
+""", unsafe_allow_html=True)
 
 # initializing chat
 if "messages" not in st.session_state:
