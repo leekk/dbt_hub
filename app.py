@@ -27,7 +27,7 @@ def get_dbt_response(user_input):
     
     # 1. Handle greetings naturally
     if any(greet in user_input for greet in ["hi","hello","hey"]):
-        return "Hi there!"
+        return "Hello!"
     
     # 2. Check for exact matches
     for skill, data in DBT_SKILLS.items():
@@ -56,7 +56,7 @@ def get_dbt_response(user_input):
         return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance!"
 
 # ====== STREAMLIT UI (WITH YOUR LOVED FORMATTING) ======
-st.set_page_config(page_title="DBT Coach", page_icon="🧠")
+st.set_page_config(page_title="Therapy Hub", page_icon="🐀")
 
 # Custom styling
 st.markdown("""
@@ -77,7 +77,7 @@ st.markdown("""
 
 # Initialize chat
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "Hi! I'm your DBT coach. 🌸 How can I help you today?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "Hi there!"}]
 
 # Display chat
 for msg in st.session_state.messages:
