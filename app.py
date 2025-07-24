@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 st.title("🧠 DBT Skills Chatbot")
-st.caption("A free, no-installation-required chatbot for DBT skills")
+st.caption("a tool for learning DBT skills")
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -46,3 +46,18 @@ if prompt := st.chat_input("Your message"):
     # Add bot response to chat history
     st.session_state.messages.append({"role": "assistant", "content": bot_reply})
     st.chat_message("assistant").write(bot_reply)
+
+st.markdown("""
+<style>
+    .stChatMessage {
+        font-family: 'Arial', sans-serif;
+    }
+    [data-testid="stChatMessage"] {
+        padding: 12px;
+        border-radius: 10px;
+    }
+    .assistant-message {
+        background-color: #f0f7ff;
+    }
+</style>
+""", unsafe_allow_html=True)
