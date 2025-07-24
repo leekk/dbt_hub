@@ -27,7 +27,7 @@ def get_dbt_response(user_input):
     
     # 1. Handle greetings naturally
     if any(greet in user_input for greet in ["hi","hello","hey"]):
-        return "Hello! 😊 I'm your DBT coach. Try asking about skills like TIPP or mindfulness!"
+        return "Hi there!"
     
     # 2. Check for exact matches
     for skill, data in DBT_SKILLS.items():
@@ -48,7 +48,7 @@ def get_dbt_response(user_input):
         prompt = f"""You're a DBT therapist. Respond warmly in 1-2 sentences to:
         "{user_input}"
         - If DBT-relevant, mention a skill
-        - Otherwise, gently guide back to DBT, try a different sentence at each time"""
+        - Otherwise, say hi"""
         
         response = requests.post(API_URL, json={"inputs": prompt}, timeout=3).json()
         return response['generated_text'].split(".")[0] + " 🌱"
