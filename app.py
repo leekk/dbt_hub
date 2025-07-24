@@ -1,65 +1,102 @@
 import streamlit as st
 import requests
+from difflib import get_close_matches
 
-# ====== DBT KNOWLEDGE BASE ======
-DBT_CONCEPTS = {
+# ====== ENHANCED DBT SKILLS DATABASE ======
+DBT_SKILLS = {
     "distress": {
-        "keywords": ["crisis", "overwhelmed", "panic", "tipp"],
-        "facts": """TIPP stands for Temperature, Intense Exercise, Paced Breathing, and Paired Muscle Relaxation."""
+        "keywords": ["overwhelmed", "panic", "crisis", "tipp", "stress"],
+        "response": """**🚨 TIPP Skills (Crisis Survival):**
+1. 🌡️ **Temperature** - Splash cold water on your face
+2. 🏃 **Intense Exercise** - 1 minute of vigorous activity
+3. 🌬️ **Paced Breathing** - Inhale 4s → Hold 4s → Exhale 6s
+4. 💪 **Paired Muscle Relaxation** - Tense then release muscles"""
     },
-    "mindfulness": {
-        "keywords": ["present", "focus", "mindful"],
-        "facts": """Mindfulness involves Observe, Describe, and Participate skills."""
+    "mindful": {
+        "keywords": ["present", "focus", "mindful", "grounding"],
+        "response": """**🧠 Mindfulness WHAT Skills:**
+1. 👀 **Observe** - Notice without judgment
+2. 📝 **Describe** - Put words to your experience
+3. 🎯 **Participate** - Fully engage in the moment"""
     }
 }
 
-# ====== AI-ASSISTED RESPONSE GENERATOR ======
-def generate_response(user_input):
-    # Step 1: Check for DBT concepts
-    detected_concept = None
-    for concept, data in DBT_CONCEPTS.items():
-        if any(keyword in user_input.lower() for keyword in data["keywords"]):
-            detected_concept = data["facts"]
-            break
+# ====== CONVERSATIONAL AI RESPONSE ======
+def get_dbt_response(user_input):
+    user_input = user_input.lower()
     
-    # Step 2: Prepare AI prompt with guardrails
-    prompt = f"""You are a Dialectical Behavior Therapy (DBT) coach. 
-Respond conversationally to this client question while incorporating these DBT facts:
-{detected_concept if detected_concept else "Use general DBT principles"}
-
-Client: {user_input}
-Coach:"""
+    # 1. Handle greetings naturally
+    if any(greet in user_input for greet in ["hi","hello","hey"]):
+        return "Hello! 😊 I'm your DBT coach. Try asking about skills like TIPP or mindfulness!"
     
-    # Step 3: Get AI-generated response (free API)
+    # 2. Check for exact matches
+    for skill, data in DBT_SKILLS.items():
+        if any(keyword in user_input for keyword in data["keywords"]):
+            return data["response"]
+    
+    # 3. Fuzzy matching
+    all_keywords = [kw for skill in DBT_SKILLS.values() for kw in skill["keywords"]]
+    matches = get_close_matches(user_input, all_keywords, n=1, cutoff=0.6)
+    if matches:
+        for skill, data in DBT_SKILLS.items():
+            if matches[0] in data["keywords"]:
+                return data["response"]
+    
+    # 4. AI Fallback (with DBT context)
     try:
         API_URL = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"
-        response = requests.post(
-            API_URL,
-            json={"inputs": prompt},
-            timeout=5
-        )
-        if response.status_code == 200:
-            return response.json()['generated_text']
+        prompt = f"""You're a DBT therapist. Respond warmly in 1-2 sentences to:
+        "{user_input}"
+        - If DBT-relevant, mention a skill
+        - Otherwise, gently guide back to DBT"""
+        
+        response = requests.post(API_URL, json={"inputs": prompt}, timeout=3).json()
+        return response['generated_text'].split(".")[0] + " 🌱"
     except:
-        pass
-    
-    # Fallback response
-    return "Let me think about how DBT skills could help with that..."
+        return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance!"
 
-# ====== STREAMLIT CHAT ======
-st.title("🧠 Conversational DBT Coach")
+# ====== STREAMLIT UI (WITH YOUR LOVED FORMATTING) ======
+st.set_page_config(page_title="DBT Coach", page_icon="🧠")
 
+# Custom styling
+st.markdown("""
+<style>
+    [data-testid="stChatMessage"] {
+        padding: 15px;
+        border-radius: 12px;
+    }
+    [data-testid="stChatMessage"][aria-label*="assistant"] {
+        background-color: #f0f7ff;
+    }
+    .stButton button {
+        background: #f0f7ff !important;
+        border: 1px solid #d0e0ff !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Initialize chat
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "Hi! I'm your DBT coach. What's on your mind today?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "Hi! I'm your DBT coach. 🌸 How can I help you today?"}]
 
+# Display chat
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
-if prompt := st.chat_input("How can DBT help you today?"):
+# Skill buttons (your favorite feature!)
+cols = st.columns(3)
+if cols[0].button("🚨 Crisis Help"):
+    st.session_state.messages.append({"role": "user", "content": "TIPP skills"})
+if cols[1].button("🧠 Mindfulness"):
+    st.session_state.messages.append({"role": "user", "content": "Mindfulness"})
+if cols[2].button("😊 Emotion Help"):
+    st.session_state.messages.append({"role": "user", "content": "Emotion regulation"})
+
+# User input
+if prompt := st.chat_input("Ask about DBT skills..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
     
-    response = generate_response(prompt)
+    response = get_dbt_response(prompt)
     st.session_state.messages.append({"role": "assistant", "content": response})
     st.chat_message("assistant").write(response)
-
