@@ -1,6 +1,24 @@
 import streamlit as st
 from huggingface_hub import InferenceClient
 
+API_TOKEN = st.secrets["HF_API_TOKEN"]
+
+client = InferenceClient(model="gpt2", token=API_TOKEN)
+
+st.title("Test GPT-2 Generation")
+
+user_input = st.text_input("Enter prompt:")
+
+if user_input:
+    try:
+        outputs = client.text_generation(user_input, max_new_tokens=50)
+        st.write("Response:", outputs[0]['generated_text'])
+    except Exception as e:
+        st.error(f"API error: {e}")
+
+"""import streamlit as st
+from huggingface_hub import InferenceClient
+
 # Replace with your real Hugging Face API token (keep it secret!)
 API_TOKEN = st.secrets["HF_API_TOKEN"]
 
@@ -46,4 +64,4 @@ for msg in st.session_state.messages:
     if msg["role"] == "user":
         st.markdown(f"**You:** {msg['content']}")
     else:
-        st.markdown(f"**Bot:** {msg['content']}")
+        st.markdown(f"**Bot:** {msg['content']}")"""
