@@ -52,7 +52,7 @@ def get_dbt_response(user_input):
         prompt = f"""You're a DBT therapist. Respond warmly in 1-2 sentences to:
         "{user_input}"
         - If DBT-relevant, mention a skill
-        - Otherwise, say hi"""
+        - Otherwise, answer briefly"""
         
         response = requests.post(API_URL, json={"inputs": prompt}, timeout=3).json()
         return response['generated_text'].split(".")[0] + " 🌱"
@@ -76,17 +76,11 @@ st.markdown("""
         background: #FFA500 !important;
         border: 1px solid #C76E00 !important;
     }
-</style>
-""", unsafe_allow_html=True)
-
-page_bg_color = """
-<style>
-[data-testid="stAppViewContainer"] > .main {
+    [data-testid="stAppViewContainer"] > .main {
     background-color: #ADD8E6; /* Light blue example */
-}
-</style>
-"""
-st.markdown(page_bg_color, unsafe_allow_html=True)
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # initializing chat
 if "messages" not in st.session_state:
