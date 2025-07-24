@@ -2,46 +2,17 @@ import streamlit as st
 from huggingface_hub import InferenceClient
 
 API_TOKEN = st.secrets["HF_API_TOKEN"]
-
 client = InferenceClient(model="gpt2", token=API_TOKEN)
 
-st.title("Test GPT-2 Generation")
+st.title("🧠 DBT Skills Chatbot with GPT-2")
 
-user_input = st.text_input("Enter prompt:")
-
-if user_input:
-    try:
-        outputs = client.text_generation(prompt, max_new_tokens=150)
-    if outputs and isinstance(outputs, list):
-        bot_reply = outputs[0]["generated_text"].strip()
-    else:
-        bot_reply = "🤖 Sorry, I didn't get a valid response."
-except Exception as e:
-    bot_reply = f"⚠️ API error: {str(e)}"
-
-"""import streamlit as st
-from huggingface_hub import InferenceClient
-
-# Replace with your real Hugging Face API token (keep it secret!)
-API_TOKEN = st.secrets["HF_API_TOKEN"]
-
-# Initialize the Hugging Face Inference client for SmolLM3-3B
-client = InferenceClient(model="gpt2", token=API_TOKEN)
-# client = InferenceClient(model="HuggingFaceTB/SmolLM3-3B", token=API_TOKEN)
-
-st.title("🧠 DBT Skills Chatbot with SmolLM3-3B")
-
-# Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# User input box
 user_input = st.text_input("You:", key="input")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
-
-    # Craft the prompt to guide the model toward DBT skills teaching
     prompt = (
         "You are a supportive therapist teaching Dialectical Behavior Therapy (DBT) skills "
         "in a friendly and easy-to-understand way. "
@@ -50,21 +21,18 @@ if user_input:
     )
 
     try:
-        # Generate a response from the model with a token limit
         outputs = client.text_generation(prompt, max_new_tokens=150)
         if outputs and isinstance(outputs, list):
-            bot_reply = outputs[0].strip()
+            bot_reply = outputs[0]["generated_text"].strip()
         else:
             bot_reply = "🤖 Sorry, I didn't get a valid response."
     except Exception as e:
-        bot_reply = f"⚠️ API error: {e}"
+        bot_reply = f"⚠️ API error: {str(e)}"
 
-    # Save bot reply to session state
     st.session_state.messages.append({"role": "bot", "content": bot_reply})
 
-# Display chat history
 for msg in st.session_state.messages:
     if msg["role"] == "user":
         st.markdown(f"**You:** {msg['content']}")
     else:
-        st.markdown(f"**Bot:** {msg['content']}")"""
+        st.markdown(f"**Bot:** {msg['content']}")
