@@ -79,7 +79,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize chat
+# initializing chat
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "assistant", "content": "Hi there!"}]
 
@@ -87,10 +87,10 @@ if "messages" not in st.session_state:
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
-# Skill buttons (your favorite feature!)
 cols = st.columns(3)
 if cols[0].button("I want to learn"):
-    st.session_state.messages.append({"role": "user", "content": "TIPP skills"})
+    st.session_state.messages.append({"role": "assistant", "content": "Do you know what you would like to learn? 
+    I can briefly review any area that interets you, just give me the keywords!"})
 if cols[1].button("I want to talk"):
     st.session_state.messages.append({"role": "user", "content": "Mindfulness"})
 if cols[2].button("I don't want to solve my problem but I should probably be solving my problem rn"):
