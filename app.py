@@ -48,7 +48,7 @@ def get_dbt_response(user_input):
         prompt = f"""You're a DBT therapist. Respond warmly in 1-2 sentences to:
         "{user_input}"
         - If DBT-relevant, mention a skill
-        - Otherwise, gently guide back to DBT"""
+        - Otherwise, gently guide back to DBT, try a different sentence at each time"""
         
         response = requests.post(API_URL, json={"inputs": prompt}, timeout=3).json()
         return response['generated_text'].split(".")[0] + " 🌱"
