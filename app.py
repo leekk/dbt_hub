@@ -11,7 +11,7 @@ user_input = st.text_input("Enter prompt:")
 
 if user_input:
     try:
-    outputs = client.text_generation(prompt, max_new_tokens=150)
+        outputs = client.text_generation(prompt, max_new_tokens=150)
     if outputs and isinstance(outputs, list):
         bot_reply = outputs[0]["generated_text"].strip()
     else:
