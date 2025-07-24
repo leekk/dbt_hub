@@ -1,63 +1,124 @@
 import streamlit as st
+from difflib import get_close_matches
 import requests
 
-st.title("🧠 DBT Skills Chatbot")
-st.caption("a tool for learning DBT skills")
+# ====== ENHANCED DBT SKILLS DATABASE ======
+DBT_SKILLS = {
+    "distress": """**🚨 TIPP Skills (Crisis Survival):**
+1. 🌡️ **Temperature** - Splash cold water on your face or hold ice
+2. 🏃 **Intense Exercise** - 1 minute of jumping jacks/running
+3. 🌬️ **Paced Breathing** - Inhale 4s → Hold 4s → Exhale 6s
+4. 💪 **Paired Muscle Relaxation** - Tense muscles for 5s then release""",
 
-# Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "Hello! I'm here to help you with DBT skills. What would you like to learn about today?"}]
+    "mindful": """**🧠 Mindfulness WHAT Skills:**
+1. 👀 **Observe** - "I notice my heart is racing"
+2. 📝 **Describe** - "I'm feeling anxious about my exam"
+3. 🎯 **Participate** - Fully engage in brushing your teeth""",
 
-# Display chat messages
-for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
+    "emotion": """**😊 Emotion Regulation:**
+• **PLEASE** (Physical health): Eat/sleep/exercise
+• **ABC** (Accumulate positives): Do 1 nice thing daily
+• **Opposite Action** - If angry, be kind instead""",
 
-# User input
-if prompt := st.chat_input("Your message"):
-    # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
+    "dear man": """**🤝 DEAR MAN (Assertiveness):**
+D - Describe facts: "When we planned to meet at 8..."
+E - Express feelings: "I felt worried when..."
+A - Assert needs: "I need us to text if late"
+R - Reinforce: "I'd really appreciate this"
+M - Mindful (stay focused)
+A - Appear confident
+N - Negotiate: "What do you think?""",
+
+    "accept": """**✋ Radical Acceptance:**
+1. Observe resistance: "I'm fighting this reality"
+2. Say: "This is what happened"
+3. Imagine accepting it
+4. List ways your life would change""",
+
+    "cope": """📝 **Coping Ahead Plan:**
+1. Describe triggering situation
+2. Choose 2 skills to use
+3. Rehearse in your mind
+4. Pack a coping kit (photos, quotes, items)"""
+}
+
+# ====== SMARTER RESPONSE SYSTEM ======
+def get_dbt_response(user_input):
+    user_input = user_input.lower()
     
-    # Prepare the prompt with instructions
-    full_prompt = f"""Act as a DBT therapist. Respond to this in a supportive way, teaching DBT skills in simple steps. Keep it under 100 words.
+    # Priority phrases (even if mixed with other words)
+    priority_phrases = {
+        "panic attack": DBT_SKILLS["distress"],
+        "can't calm down": DBT_SKILLS["distress"],
+        "assertive": DBT_SKILLS["dear man"],
+        "mind wandering": DBT_SKILLS["mindful"]
+    }
     
-    User: {prompt}
-    Therapist:"""
+    for phrase, response in priority_phrases.items():
+        if phrase in user_input:
+            return response
     
-    # Use Hugging Face's free inference API (no token needed for some models)
+    # Fuzzy keyword matching
+    matches = get_close_matches(user_input, DBT_SKILLS.keys(), n=1, cutoff=0.5)
+    if matches:
+        return DBT_SKILLS[matches[0]]
+    
+    # Fallback: Use free API if no match found
     try:
-        API_URL = "https://api-inference.huggingface.co/models/gpt2"
-        response = requests.post(API_URL, json={"inputs": full_prompt})
-        bot_reply = response.json()[0]['generated_text'].split("Therapist:")[-1].strip()
+        API_URL = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"
+        response = requests.post(API_URL, 
+                               json={"inputs": f"As a DBT therapist, answer briefly: {user_input}"},
+                               timeout=3)
+        if response.status_code == 200:
+            return response.json()['generated_text'].split(".")[0] + " (via DBT skills)"
     except:
-        # Fallback to rule-based responses if API fails
-        lower_prompt = prompt.lower()
-        if any(word in lower_prompt for word in ["distress", "crisis", "upset"]):
-            bot_reply = """Try TIPP skills:
-1. Temperature (cold water on face)
-2. Intense exercise (1 minute)
-3. Paced breathing (4-4-6)
-4. Paired muscle relaxation"""
-        elif any(word in lower_prompt for word in ["mindfulness", "present"]):
-            bot_reply = "Mindfulness means observing, describing, and participating in the present moment without judgment."
-        else:
-            bot_reply = "I'm here to help with DBT skills. Could you tell me more about what you're working on?"
+        pass
     
-    # Add bot response to chat history
-    st.session_state.messages.append({"role": "assistant", "content": bot_reply})
-    st.chat_message("assistant").write(bot_reply)
+    # Final fallback
+    skill_list = "\n• ".join([f"**{k.capitalize()}**" for k in DBT_SKILLS.keys()])
+    return f"""I can explain these DBT skills:\n\n• {skill_list}\n\nTry: *"How do I use TIPP when overwhelmed?"*"""
 
+# ====== STREAMLIT UI ======
+st.set_page_config(page_title="DBT Coach", page_icon="🧠")
+
+# Custom styling
 st.markdown("""
 <style>
-    .stChatMessage {
-        font-family: 'Arial', sans-serif;
-    }
     [data-testid="stChatMessage"] {
-        padding: 12px;
-        border-radius: 10px;
+        padding: 15px;
+        border-radius: 12px;
     }
-    .assistant-message {
+    [data-testid="stChatMessage"][aria-label*="assistant"] {
         background-color: #f0f7ff;
+    }
+    .stButton button {
+        background: #f0f7ff !important;
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Quick-access buttons
+if "messages" not in st.session_state:
+    st.session_state.messages = [{"role": "assistant", "content": "Hi! I'm your DBT Coach. Ask about skills like **TIPP**, **DEAR MAN**, or **Mindfulness**."}]
+
+# Display chat
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
+
+# Skill buttons
+cols = st.columns(3)
+if cols[0].button("🚨 Crisis Help"):
+    st.session_state.messages.append({"role": "user", "content": "TIPP skills"})
+if cols[1].button("🧠 Mindfulness"):
+    st.session_state.messages.append({"role": "user", "content": "mindfulness"})
+if cols[2].button("🤝 Relationships"):
+    st.session_state.messages.append({"role": "user", "content": "DEAR MAN"})
+
+# User input
+if prompt := st.chat_input("Ask about DBT skills..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.chat_message("user").write(prompt)
+    
+    response = get_dbt_response(prompt)
+    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.chat_message("assistant").write(response)
