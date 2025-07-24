@@ -63,7 +63,7 @@ def get_dbt_response(user_input):
 st.set_page_config(page_title="Therapy Hub", page_icon="🐀")
 
 # Custom styling
-st.markdown("""
+"""st.markdown("""
 <style>
     [data-testid="stChatMessage"] {
         padding: 15px;
@@ -77,7 +77,7 @@ st.markdown("""
         border: 1px solid #d0e0ff !important;
     }
 </style>
-""", unsafe_allow_html=True)
+""", unsafe_allow_html=True)"""
 
 # initializing chat
 if "messages" not in st.session_state:
@@ -92,10 +92,10 @@ if cols[0].button("I want to learn"):
     st.session_state.messages.append({"role": "assistant", "content": """Do you know what you would like to learn? 
 I can briefly review any area that interets you, just give me the keywords!"""})
 if cols[1].button("I want to talk"):
-    st.session_state.messages.append({"role": "user", "content": """Go ahead, let me know if you would like advice, 
+    st.session_state.messages.append({"role": "assistant", "content": """Go ahead, let me know if you would like advice, 
     some skills, a quick solution or simply a friendly ear!"""})
 if cols[2].button("I don't want to solve my problem but I should probably be solving my problem rn"):
-    st.session_state.messages.append({"role": "user", "content": """it do be like that"""})
+    st.session_state.messages.append({"role": "assistant", "content": """it do be like that"""})
 
 # User input
 if prompt := st.chat_input("Ask about DBT skills..."):
