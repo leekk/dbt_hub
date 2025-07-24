@@ -18,7 +18,7 @@ DBT_SKILLS = {
 1. 👀 **Observe** - Notice without judgment
 2. 📝 **Describe** - Put words to your experience
 3. 🎯 **Participate** - Fully engage in the moment"""
-    }
+    },
     "dysphoric": {
         "keywords": ["sad", "upset", "miserable", "down"], 
         "response": """it's normal to feel this way. Would you like to go through your feelings together?"""
