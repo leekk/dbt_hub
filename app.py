@@ -3,7 +3,7 @@ import requests
 
 # Hugging Face settings
 API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1"
-headers = {"Authorization": f"Bearer YOUR_HUGGINGFACE_API_TOKEN"}
+headers = {"Authorization": f"Bearer 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"}
 
 def query(payload):
     response = requests.post(API_URL, headers=headers, json=payload)
