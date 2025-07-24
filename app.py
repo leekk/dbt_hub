@@ -6,7 +6,7 @@ import traceback
 API_TOKEN = st.secrets["HF_API_TOKEN"]
 
 # Initialize the Hugging Face Inference client with GPT-2 (publicly supported)
-client = InferenceClient(model="gpt2", token=API_TOKEN)
+client = InferenceClient(model="HuggingFaceTB/SmolLM3-3B", token=API_TOKEN)
 
 st.title("🧠 DBT Skills Chatbot with GPT-2")
 
