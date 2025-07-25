@@ -47,23 +47,25 @@ def get_dbt_response(user_input):
     # 4. AI Fallback (with DBT context)
     try:
         API_URL = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"
-        prompt = f"""You're a DBT therapist. Respond warmly in 1-2 sentences to:
-        "{user_input}"
-        - If DBT-relevant, mention a skill
-        - Otherwise, answer briefly"""
+        prompt = f"""You're a DBT therapist. The user said "{user_input}". 
+        You reply warmly in 1-2 sentences. If DBT related, name the skill."""
         
         #response = requests.post(API_URL, json={"inputs": prompt}, timeout=3).json()
         #return response['generated_text'].split(".")[0] + " 🌱"
     #except:
         #return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance!"
 
-    response = requests.post(API_URL, json={"inputs": prompt}, timeout=3)
-    response_json = response.json()
+        response = requests.post(API_URL, json={"inputs": prompt}, timeout=5)
+        response_json = response.json()
 
-    if 'generated_text' in response_json:
-        return response_json['generated_text'].split(".")[0] + " 🌱"
-    else:
-        return "Hmm, I couldn't quite generate a response. Try asking about a DBT skill like 'wise mind' or 'opposite action'."
+        if 'generated_text' in response_json:
+            return response_json['generated_text'].split(".")[0] + " 🌱"
+        else:
+            return "I'm here for you! Maybe we can talk about radical acceptance or emotion regulation? 🌿"
+
+    except Exception as e:
+        print("AI Fallback error:", e)
+        return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance!"
 
 # BELOW IS THE UI
 st.set_page_config(page_title="Therapy Hub", page_icon="🐀")
