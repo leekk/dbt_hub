@@ -48,7 +48,7 @@ def get_dbt_response(user_input):
     try:
         #API_URL = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"
         API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1"
-        headers = {"Authorization": "Bearer {st.secrets['HF_API_KEY']}"} 
+        headers = {"Authorization": f"Bearer {st.secrets['HF_API_KEY']}"} 
 
 
         prompt = f"""You're a DBT therapist. The user said "{user_input}". 
