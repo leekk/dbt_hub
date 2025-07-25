@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 from difflib import get_close_matches
 from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
 
 
 tokenizer = AutoTokenizer.from_pretrained("HuggingFaceTB/SmolLM3-3B")
