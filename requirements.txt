@@ -1,3 +1,4 @@
 streamlit
 huggingface-hub
 requests
+transformers
