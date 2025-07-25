@@ -55,8 +55,6 @@ def get_dbt_response(user_input):
         You reply warmly in 1-2 sentences. If DBT related, name the skill."""
 
         
-        response = requests.post(url, headers=headers, json={"inputs": "What is a cat?"})
-        
         #response = requests.post(API_URL, json={"inputs": prompt}, timeout=3).json()
         #return response['generated_text'].split(".")[0] + " 🌱"
     #except:
@@ -66,8 +64,6 @@ def get_dbt_response(user_input):
         response_json = response.json()
 
         st.write("RAW RESPONSE:", response_json)
-        #niye bunu sonradan ekledi bilmiyorum
-        st.json(reponse.json())
 
         if 'generated_text' in response_json:
             return response_json['generated_text'].split(".")[0] + " 🌱"
@@ -75,7 +71,7 @@ def get_dbt_response(user_input):
             return "I'm here for you! Maybe we can talk about radical acceptance or emotion regulation? 🌿"
 
     except Exception as e:
-        print("AI Fallback error:", e)
+        st.write("AI Fallback error:", e)
         return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance!"
 
 # BELOW IS THE UI
