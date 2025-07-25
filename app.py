@@ -29,11 +29,9 @@ DBT_SKILLS = {
 def get_dbt_response(user_input):
     user_input = user_input.lower()
     
-    # 1. Handle greetings naturally
     if any(greet in user_input for greet in ["hi","hello","hey"]):
         return "Hello!"
     
-    # 2. Check for exact matches
     for skill, data in DBT_SKILLS.items():
         if any(keyword in user_input for keyword in data["keywords"]):
             return data["response"]
@@ -54,10 +52,18 @@ def get_dbt_response(user_input):
         - If DBT-relevant, mention a skill
         - Otherwise, answer briefly"""
         
-        response = requests.post(API_URL, json={"inputs": prompt}, timeout=3).json()
-        return response['generated_text'].split(".")[0] + " 🌱"
-    except:
-        return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance!"
+        #response = requests.post(API_URL, json={"inputs": prompt}, timeout=3).json()
+        #return response['generated_text'].split(".")[0] + " 🌱"
+    #except:
+        #return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance!"
+
+    response = requests.post(API_URL, json={"inputs": prompt}, timeout=3)
+    response_json = response.json()
+
+    if 'generated_text' in response_json:
+        return response_json['generated_text'].split(".")[0] + " 🌱"
+    else:
+        return "Hmm, I couldn't quite generate a response. Try asking about a DBT skill like 'wise mind' or 'opposite action'."
 
 # BELOW IS THE UI
 st.set_page_config(page_title="Therapy Hub", page_icon="🐀")
