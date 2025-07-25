@@ -47,7 +47,7 @@ def get_dbt_response(user_input):
     # 4. AI Fallback (with DBT context)
     try:
         #API_URL = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"
-        API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1"
+        API_URL = "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM3-3B"
         headers = {"Authorization": f"Bearer {st.secrets['HF_API_TOKEN']}"} 
 
 
