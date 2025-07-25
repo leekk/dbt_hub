@@ -47,6 +47,9 @@ def get_dbt_response(user_input):
     # 4. AI Fallback (with DBT context)
     try:
         API_URL = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"
+        headers = {"Authorization": "Bearer {st.secrets['HF_API_KEY']}"} 
+
+
         prompt = f"""You're a DBT therapist. The user said "{user_input}". 
         You reply warmly in 1-2 sentences. If DBT related, name the skill."""
         
@@ -58,7 +61,7 @@ def get_dbt_response(user_input):
         response = requests.post(API_URL, json={"inputs": prompt}, timeout=5)
         response_json = response.json()
 
-        st.write("DEBUG RESPONSE:", response_json)
+        st.write("RAW RESPONSE:", response_json)
 
         if 'generated_text' in response_json:
             return response_json['generated_text'].split(".")[0] + " 🌱"
