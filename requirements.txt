@@ -2,3 +2,5 @@ streamlit
 huggingface-hub
 requests
 transformers
+torch
+accelerate
