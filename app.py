@@ -58,6 +58,8 @@ def get_dbt_response(user_input):
         response = requests.post(API_URL, json={"inputs": prompt}, timeout=5)
         response_json = response.json()
 
+        print("DEBUG RESPONSE:", response_json)
+
         if 'generated_text' in response_json:
             return response_json['generated_text'].split(".")[0] + " 🌱"
         else:
