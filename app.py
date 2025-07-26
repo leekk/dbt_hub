@@ -1,8 +1,8 @@
 import streamlit as st
 import requests
 from difflib import get_close_matches
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
+#from transformers import AutoModelForCausalLM, AutoTokenizer
+#import torch
 
 # DBT DATABASE
 DBT_SKILLS = {
