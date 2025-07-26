@@ -52,6 +52,8 @@ def get_dbt_response(user_input):
         API_URL = "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM3-3B"
         headers = {"Authorization": f"Bearer {st.secrets['HF_API_TOKEN']}"} 
 
+        st.write("HF token begins with:", st.secrets['HF_API_TOKEN'][:10] + "********")
+
 
         prompt = f"""You're a DBT therapist. The user said "{user_input}". 
         You reply warmly in 1-2 sentences. If DBT related, name the skill."""
