@@ -58,6 +58,12 @@ def get_dbt_response(user_input):
         prompt = f"""You're a DBT therapist. The user said "{user_input}". 
         You reply warmly in 1-2 sentences. If DBT related, name the skill."""
 
+       
+        test_url = "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM3-3B"
+
+        test_response = requests.get(test_url, headers=headers)
+        st.write("HF test response:", test_response.status_code, test_response.text)
+
         
         #response = requests.post(API_URL, json={"inputs": prompt}, timeout=3).json()
         #return response['generated_text'].split(".")[0] + " 🌱"
