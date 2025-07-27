@@ -4,6 +4,36 @@ from difflib import get_close_matches
 #from transformers import AutoModelForCausalLM, AutoTokenizer
 #import torch
 
+from huggingface_hub import InferenceClient
+import os
+
+# Initialize the FREE client (paste your token here)
+client = InferenceClient(
+    token=os.getenv("HF_TOKEN") or "hf_your_token_here",  # Replace with your token
+    model="mistralai/Mistral-7B-Instruct-v0.1"  # Official model name
+)
+
+def generate_dbt_response(user_input):
+    """Generate therapist response using free API"""
+    prompt = f"""Act as a DBT therapist. Provide a concise response and recommend one worksheet for: {user_input}
+    Response format:
+    [Empathy statement]
+    [Skill suggestion]
+    Worksheet: [Name] - [Brief description]"""
+    
+    return client.text_generation(
+        prompt=prompt,
+        max_new_tokens=150,
+        temperature=0.7
+    )
+
+# Replace your existing chatbot code with:
+user_input = st.chat_input("How can I help today?")
+if user_input:
+    with st.spinner("Thinking..."):
+        response = generate_dbt_response(user_input)
+    st.write(response)
+
 # DBT DATABASE
 DBT_SKILLS = {
     "distress": {
