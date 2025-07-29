@@ -9,9 +9,28 @@ import os
 
 # Initialize the FREE client (paste your token here)
 client = InferenceClient(
-    token=os.getenv("HF_TOKEN") or "hf_your_token_here",  # Replace with your token
+    token=os.getenv("HF_TOKEN"),
     model="mistralai/Mistral-7B-Instruct-v0.1"  # Official model name
 )
+
+if not os.getenv("HF_TOKEN"):
+    st.error("""
+    ❌ Token not loaded. Check:
+    1. GitHub Secrets (for deployment)
+    2. .env file (for local testing)
+    """)
+    st.stop()
+
+with st.expander("🔒 Connection Test", expanded=False):
+    try:
+        test_response = client.text_generation(
+            prompt="Test",
+            max_new_tokens=1
+        )
+        st.success(f"✅ API Connected | Response: '{test_response}'")
+    except Exception as e:
+        st.error(f"❌ Connection failed: {str(e)}")
+        st.stop()
 
 def generate_dbt_response(user_input):
     """Generate therapist response using free API"""
@@ -21,19 +40,25 @@ def generate_dbt_response(user_input):
     [Skill suggestion]
     Worksheet: [Name] - [Brief description]"""
     
-    return client.text_generation(
-        prompt=prompt,
-        max_new_tokens=150,
-        temperature=0.7
-    )
+    try:
+        return client.text_generation(
+            prompt=prompt,
+            max_new_tokens=150,
+            temperature=0.7
+        )
+    except Exception as e:
+        return f"⚠️ Error: {str(e)}\n\n(Try again later or contact support)"
 
-# Replace your existing chatbot code with:
-user_input = st.chat_input("How can I help today?")
-if user_input:
-    with st.spinner("Thinking..."):
+if user_input := st.chat_input("How can I help today?"):
+    with st.spinner("🧠 Analyzing your request..."):
         response = generate_dbt_response(user_input)
-    st.write(response)
+    
+    with st.chat_message("assistant"):
+        st.write(response)
+        st.caption("Disclaimer: This is an AI tool, not professional medical advice.")
 
+
+'''
 # DBT DATABASE
 DBT_SKILLS = {
     "distress": {
@@ -163,3 +188,4 @@ if prompt := st.chat_input("Ask about DBT skills..."):
     response = get_dbt_response(prompt)
     st.session_state.messages.append({"role": "assistant", "content": response})
     st.chat_message("assistant").write(response)
+'''
