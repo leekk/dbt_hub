@@ -4,26 +4,13 @@ import os
 import time
 from datetime import datetime
 
-import streamlit as st
-st.write("## Secret Injection Test")
-
-if hasattr(st, "secrets"):
-    st.write("Secrets object exists")
-    if "HF_TOKEN" in st.secrets:
-        st.success(f"✅ Token found: {st.secrets['HF_TOKEN'][:8]}...")
-    else:
-        st.error("❌ HF_TOKEN missing in st.secrets")
-        st.write("Actual secrets:", st.secrets)
-else:
-    st.error("❌ st.secrets doesn't exist (platform failure)")
-
 # ======================
 # CONSTANTS
 # ======================
 MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.1"
 
 # ======================
-# BULLETPROOF INITIALIZATION
+# INITIALIZATION
 # ======================
 st.set_page_config(
     page_title="DBT Therapy Assistant",
@@ -31,33 +18,20 @@ st.set_page_config(
     layout="wide"
 )
 
-# Debug header
+# ======================
+# SECRETS VALIDATION
+# ======================
 st.sidebar.title("Debug Console")
 st.sidebar.write(f"Last check: {datetime.now().strftime('%H:%M:%S')}")
 
-# ======================
-# TOKEN VALIDATION
-# ======================
+# Token loading with fail-fast
 try:
-    # 1. DEMAND the token (no .get() - fails fast if missing)
-    token = st.secrets["HF_TOKEN"]
-    
-    # 2. Validate format
-    if not isinstance(token, str) or not token.startswith("hf_"):
-        st.error(f"""
-        ❌ Invalid token format:
-        - Type: {type(token)}
-        - Value: {token[:10] + '...' if token else 'None'}
-        - Must start with 'hf_'
-        """)
-        st.stop()
-    
-    # 3. Masked display for verification
+    token = st.secrets["HF_TOKEN"]  # Direct access (no .get())
+    assert token.startswith("hf_"), "Token must start with 'hf_'"
     st.sidebar.success(f"✅ Token loaded: {token[:8]}...{token[-4:]}")
-    
-except KeyError:
-    st.error("""
-    ❌ Secret 'HF_TOKEN' not found in st.secrets.
+except Exception as e:
+    st.error(f"""
+    ❌ Secret validation failed: {str(e)}
     Verify your Streamlit Secrets:
     1. Go to [share.streamlit.io](https://share.streamlit.io/)
     2. App → Settings → Secrets
@@ -76,70 +50,73 @@ try:
     client = InferenceClient(
         token=token,
         model=MODEL_NAME,
-        timeout=30,
-        server_url="https://api-inference.huggingface.co/models"  # Force correct endpoint
+        timeout=30  # Increased timeout for free tier
     )
-    st.sidebar.success("✅ Inference client initialized")
+    st.sidebar.success("✅ Inference client ready")
 except Exception as e:
     st.error(f"""
     ❌ Client initialization failed:
     {str(e)}
     
-    Common fixes:
-    1. Regenerate your HF token
-    2. Check model name: {MODEL_NAME}
-    3. Wait 5 mins and redeploy
+    Try:
+    1. Wait 5 minutes
+    2. Redeploy the app
+    3. Check model availability at:
+       https://huggingface.co/{MODEL_NAME}
     """)
     st.stop()
 
 # ======================
-# CORE FUNCTIONALITY
+# THERAPY ENGINE
 # ======================
 def generate_dbt_response(user_input: str) -> str:
     """Generate therapist response with robust error handling"""
-    prompt = f"""Act as a DBT therapist. Respond to: {user_input}
-    Format:
-    1. [Empathy statement]
-    2. [Skill suggestion]
-    3. Worksheet: [Name] - [Description]"""
+    prompt = f"""As a DBT therapist, provide:
+    1. Empathy: [Brief understanding]
+    2. Skill: [DBT technique]
+    3. Worksheet: [Name] - [Purpose]
+    For: "{user_input}\""""
     
     try:
         time.sleep(1.5)  # Rate limit protection
-        response = client.text_generation(
+        return client.text_generation(
             prompt=prompt,
-            max_new_tokens=150,
+            max_new_tokens=200,  # Increased for better responses
             temperature=0.7,
             do_sample=True
         )
-        return response
     except Exception as e:
-        return f"""⚠️ System Busy - Sample Response:
-        1. I hear you're feeling distressed
-        2. Try TIPP skills (Temperature, Intense exercise)
-        3. Worksheet: Emotion Regulation - Changing Responses
-        [Error: {str(e)}]"""
+        return f"""⚠️ System Busy - Try This Instead:
+        1. I understand this is difficult
+        2. Practice TIPP: 
+           - Temperature (cold water on face)
+           - Intense exercise
+        3. Worksheet: Distress Tolerance - Crisis Survival
+        [Technical Error: {str(e)}]"""
 
 # ======================
-# UI COMPONENTS
+# USER INTERFACE
 # ======================
 st.title("DBT Therapy Assistant")
-st.caption("Note: AI-generated suggestions, not professional medical advice")
+st.caption("AI-generated suggestions • Not professional medical advice")
 
-if user_input := st.chat_input("How can I help today?"):
-    with st.spinner("🧠 Processing..."):
-        response = generate_dbt_response(user_input)
+if prompt := st.chat_input("How can I help today?"):
+    with st.spinner("🧠 Analyzing..."):
+        response = generate_dbt_response(prompt)
     
     with st.chat_message("assistant"):
         st.write(response)
-        st.caption("Always consult a human therapist for clinical care")
+        st.caption("For clinical care, consult a licensed therapist")
 
 # ======================
-# DEBUG FOOTER
+# DEBUG INFO
 # ======================
-with st.sidebar.expander("Technical Details"):
-    st.write("Model:", MODEL_NAME)
-    st.write("Token source:", "Streamlit Secrets")
-    st.write("Environment keys:", [k for k in os.environ if "HF_" in k])
+with st.sidebar.expander("Technical"):
+    st.write(f"Model: {MODEL_NAME}")
+    st.write(f"Token source: Streamlit Secrets")
+    st.write("Environment:", 
+             {k:v for k,v in os.environ.items() if "HF_" in k})
+
 
 '''
 # DBT DATABASE
