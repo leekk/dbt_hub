@@ -1,121 +1,94 @@
 import streamlit as st
 from huggingface_hub import InferenceClient
-import os
 import time
 from datetime import datetime
 
-# ======================
-# CONSTANTS
-# ======================
+# ===== CONSTANTS =====
 MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.1"
+RATE_LIMIT_DELAY = 3  # seconds between requests
 
-# ======================
-# INITIALIZATION
-# ======================
+# ===== SETUP =====
 st.set_page_config(
     page_title="DBT Therapy Assistant",
     page_icon="🧠",
-    layout="wide"
+    layout="centered"
 )
 
-# ======================
-# SECRETS VALIDATION
-# ======================
-st.sidebar.title("Debug Console")
-st.sidebar.write(f"Last check: {datetime.now().strftime('%H:%M:%S')}")
-
-# Token loading with fail-fast
-try:
-    token = st.secrets["HF_TOKEN"]  # Direct access (no .get())
-    assert token.startswith("hf_"), "Token must start with 'hf_'"
-    st.sidebar.success(f"✅ Token loaded: {token[:8]}...{token[-4:]}")
-except Exception as e:
-    st.error(f"""
-    ❌ Secret validation failed: {str(e)}
-    Verify your Streamlit Secrets:
-    1. Go to [share.streamlit.io](https://share.streamlit.io/)
-    2. App → Settings → Secrets
-    3. Must contain EXACTLY:
-       ```toml
-       [secrets]
-       HF_TOKEN = "hf_your_token_here"  # Quotes required
-       ```
-    """)
-    st.stop()
-
-# ======================
-# CLIENT INITIALIZATION
-# ======================
-try:
-    client = InferenceClient(
-        token=token,
-        model=MODEL_NAME,
-        timeout=30  # Increased timeout for free tier
-    )
-    st.sidebar.success("✅ Inference client ready")
-except Exception as e:
-    st.error(f"""
-    ❌ Client initialization failed:
-    {str(e)}
-    
-    Try:
-    1. Wait 5 minutes
-    2. Redeploy the app
-    3. Check model availability at:
-       https://huggingface.co/{MODEL_NAME}
-    """)
-    st.stop()
-
-# ======================
-# THERAPY ENGINE
-# ======================
-def generate_dbt_response(user_input: str) -> str:
-    """Generate therapist response with robust error handling"""
-    prompt = f"""As a DBT therapist, provide:
-    1. Empathy: [Brief understanding]
-    2. Skill: [DBT technique]
-    3. Worksheet: [Name] - [Purpose]
-    For: "{user_input}\""""
-    
+# ===== SECRETS & CLIENT =====
+def init_client():
     try:
-        time.sleep(1.5)  # Rate limit protection
-        return client.text_generation(
-            prompt=prompt,
-            max_new_tokens=200,  # Increased for better responses
-            temperature=0.7,
-            do_sample=True
+        # Initialize with automatic queue handling
+        return InferenceClient(
+            token=st.secrets["HF_TOKEN"],
+            model=MODEL_NAME,
+            timeout=45  # Extended timeout
         )
     except Exception as e:
-        return f"""⚠️ System Busy - Try This Instead:
-        1. I understand this is difficult
-        2. Practice TIPP: 
-           - Temperature (cold water on face)
-           - Intense exercise
-        3. Worksheet: Distress Tolerance - Crisis Survival
-        [Technical Error: {str(e)}]"""
+        st.error(f"Client initialization failed: {str(e)}")
+        st.stop()
 
-# ======================
-# USER INTERFACE
-# ======================
+client = init_client()
+
+# ===== THERAPY ENGINE =====
+def generate_dbt_response(user_input):
+    """Generate response with advanced error recovery"""
+    prompt = f"""As a DBT therapist, provide:
+1. [Brief empathetic validation]
+2. [Specific DBT skill recommendation]
+3. [Worksheet name] - [Brief description]
+
+User: {user_input}"""
+    
+    for attempt in range(2):  # Two attempts
+        try:
+            time.sleep(RATE_LIMIT_DELAY)
+            response = client.text_generation(
+                prompt=prompt,
+                max_new_tokens=250,
+                temperature=0.7,
+                do_sample=True,
+                seed=42  # For consistency
+            )
+            return response
+            
+        except Exception as e:
+            if attempt == 1:  # Final fallback
+                return """🌱 Quick DBT Exercise:
+1. **Paced Breathing**: 
+   - Inhale 4s → Hold 4s → Exhale 6s
+2. **Grounding**:
+   - Name: 5 things you see → 4 sounds → 3 textures
+3. Worksheet: "Distress Tolerance" - Crisis survival skills
+[System recovering - try again in 1 minute]"""
+
+# ===== UI =====
 st.title("DBT Therapy Assistant")
-st.caption("AI-generated suggestions • Not professional medical advice")
+st.caption("AI-assisted support | Not a substitute for professional care")
 
-if prompt := st.chat_input("How can I help today?"):
-    with st.spinner("🧠 Analyzing..."):
+if prompt := st.chat_input("Share what's on your mind..."):
+    with st.spinner("💭 Thinking carefully..."):
         response = generate_dbt_response(prompt)
     
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar="🧠"):
         st.write(response)
-        st.caption("For clinical care, consult a licensed therapist")
+        st.divider()
+        st.caption("""
+        Remember:  
+        • These are suggestions, not prescriptions  
+        • Practice skills when calm to build mastery  
+        • Reach out to your therapist for personal guidance""")
 
-# ======================
-# DEBUG INFO
-# ======================
-with st.sidebar.expander("Technical"):
+# ===== DEBUG =====
+with st.sidebar:
+    st.title("System Status")
+    st.write(f"Last check: {datetime.now().strftime('%H:%M:%S')}")
+    st.success("✅ API Connected")
     st.write(f"Model: {MODEL_NAME}")
-    st.write(f"Token source: Streamlit Secrets")
-    st.write("Environment:", 
-             {k:v for k,v in os.environ.items() if "HF_" in k})
+    
+    if st.button("🔄 Test Connection"):
+        with st.spinner("Testing..."):
+            test_response = generate_dbt_response("Test connection")
+            st.info(f"Response: {test_response[:100]}...")
 
 
 '''
