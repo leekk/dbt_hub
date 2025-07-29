@@ -1,100 +1,88 @@
 import streamlit as st
-import requests
-from difflib import get_close_matches
-#from transformers import AutoModelForCausalLM, AutoTokenizer
-#import torch
-
-from datetime import datetime
-
 from huggingface_hub import InferenceClient
 import os
-
 import time
-# ======================
-# Debugging Setup
-# ======================
-st.write("Streamlit secrets:", st.secrets)  # Should show HF_TOKEN
-st.write("Environment vars:", dict(os.environ))  # Look for HF_TOKEN
-def debug_print(label, value):
-    """Helper function for debug output"""
-    st.sidebar.write(f"🔍 {label}:", value)
-
-st.sidebar.title("Debug Panel")
-st.sidebar.markdown(f"Last test: {datetime.now().strftime('%H:%M:%S')}")
+from datetime import datetime
 
 # ======================
-# Token Loading
+# CONSTANTS
 # ======================
-# Try all possible secret locations
-token = (
-    st.secrets.get("HF_TOKEN") or  # Streamlit Sharing
-    os.getenv("HF_TOKEN")          # GitHub Secrets
+MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.1"
+
+# ======================
+# BULLETPROOF INITIALIZATION
+# ======================
+st.set_page_config(
+    page_title="DBT Therapy Assistant",
+    page_icon="🧠",
+    layout="wide"
 )
 
-debug_print("Token prefix", token[:4] + "..." if token else "None")
+# Debug header
+st.sidebar.title("Debug Console")
+st.sidebar.write(f"Last check: {datetime.now().strftime('%H:%M:%S')}")
 
-if not token or not token.startswith("hf_"):
-    st.error(f"""
-    ❌ Token loading failed. Check:
-    1. Streamlit Sharing: Settings → Secrets → Add `[secrets] HF_TOKEN="hf_..."`
-    2. GitHub: Repo Settings → Secrets → Actions → Add `HF_TOKEN`
-    3. Token must start with 'hf_'
-    Current value: {token[:10] + '...' if token else 'None'}
+# ======================
+# TOKEN VALIDATION
+# ======================
+try:
+    # 1. DEMAND the token (no .get() - fails fast if missing)
+    token = st.secrets["HF_TOKEN"]
+    
+    # 2. Validate format
+    if not isinstance(token, str) or not token.startswith("hf_"):
+        st.error(f"""
+        ❌ Invalid token format:
+        - Type: {type(token)}
+        - Value: {token[:10] + '...' if token else 'None'}
+        - Must start with 'hf_'
+        """)
+        st.stop()
+    
+    # 3. Masked display for verification
+    st.sidebar.success(f"✅ Token loaded: {token[:8]}...{token[-4:]}")
+    
+except KeyError:
+    st.error("""
+    ❌ Secret 'HF_TOKEN' not found in st.secrets.
+    Verify your Streamlit Secrets:
+    1. Go to [share.streamlit.io](https://share.streamlit.io/)
+    2. App → Settings → Secrets
+    3. Must contain EXACTLY:
+       ```toml
+       [secrets]
+       HF_TOKEN = "hf_your_token_here"  # Quotes required
+       ```
     """)
     st.stop()
 
 # ======================
-# API Client Setup
+# CLIENT INITIALIZATION
 # ======================
 try:
     client = InferenceClient(
         token=token,
-        model="mistralai/Mistral-7B-Instruct-v0.1",
-        timeout=30  # Increase timeout for free tier
+        model=MODEL_NAME,
+        timeout=30,
+        server_url="https://api-inference.huggingface.co/models"  # Force correct endpoint
     )
-    debug_print("Client initialized", "✅")
+    st.sidebar.success("✅ Inference client initialized")
 except Exception as e:
-    st.error(f"❌ Client initialization failed: {str(e)}")
+    st.error(f"""
+    ❌ Client initialization failed:
+    {str(e)}
+    
+    Common fixes:
+    1. Regenerate your HF token
+    2. Check model name: {MODEL_NAME}
+    3. Wait 5 mins and redeploy
+    """)
     st.stop()
 
 # ======================
-# Connection Test
+# CORE FUNCTIONALITY
 # ======================
-with st.expander("🚦 Connection Tests", expanded=True):
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("API Status Check")
-        try:
-            api_status = requests.get(
-                "https://api-inference.huggingface.co/status",
-                headers={"Authorization": f"Bearer {token}"},
-                timeout=10
-            ).json()
-            st.json(api_status)
-            debug_print("API Status", "✅ Online")
-        except Exception as e:
-            st.error(f"API Status Check Failed: {str(e)}")
-            debug_print("API Status", "❌ Offline")
-
-    with col2:
-        st.subheader("Model Test")
-        try:
-            time.sleep(1)  # Rate limit protection
-            test_response = client.text_generation(
-                prompt="Hello",
-                max_new_tokens=1
-            )
-            st.success(f"Model Response: '{test_response}'")
-            debug_print("Model Test", "✅ Working")
-        except Exception as e:
-            st.error(f"Model Test Failed: {str(e)}")
-            debug_print("Model Test", "❌ Failed")
-
-# ======================
-# Main Application
-# ======================
-def generate_dbt_response(user_input):
+def generate_dbt_response(user_input: str) -> str:
     """Generate therapist response with robust error handling"""
     prompt = f"""Act as a DBT therapist. Respond to: {user_input}
     Format:
@@ -103,7 +91,7 @@ def generate_dbt_response(user_input):
     3. Worksheet: [Name] - [Description]"""
     
     try:
-        time.sleep(1.5)  # Avoid rate limiting
+        time.sleep(1.5)  # Rate limit protection
         response = client.text_generation(
             prompt=prompt,
             max_new_tokens=150,
@@ -112,34 +100,33 @@ def generate_dbt_response(user_input):
         )
         return response
     except Exception as e:
-        return f"""⚠️ System Temporarily Unavailable
-        Sample DBT Response:
+        return f"""⚠️ System Busy - Sample Response:
         1. I hear you're feeling distressed
-        2. Try the TIPP skill: Temperature change, Intense exercise
-        3. Worksheet: Emotion Regulation - Changing Emotional Responses
+        2. Try TIPP skills (Temperature, Intense exercise)
+        3. Worksheet: Emotion Regulation - Changing Responses
         [Error: {str(e)}]"""
 
 # ======================
-# Chat Interface
+# UI COMPONENTS
 # ======================
 st.title("DBT Therapy Assistant")
-st.caption("Note: This is an AI tool, not professional medical advice")
+st.caption("Note: AI-generated suggestions, not professional medical advice")
 
 if user_input := st.chat_input("How can I help today?"):
-    with st.spinner("🧠 Processing your request..."):
+    with st.spinner("🧠 Processing..."):
         response = generate_dbt_response(user_input)
     
     with st.chat_message("assistant"):
         st.write(response)
-        st.caption("Disclaimer: Consult a human therapist for clinical care")
+        st.caption("Always consult a human therapist for clinical care")
 
 # ======================
-# Debug Footer
+# DEBUG FOOTER
 # ======================
-st.sidebar.markdown("---")
-st.sidebar.write("Environment Variables:")
-st.sidebar.json({k:v for k,v in os.environ.items() if "HF_" in k or "SECRET" in k})
-
+with st.sidebar.expander("Technical Details"):
+    st.write("Model:", MODEL_NAME)
+    st.write("Token source:", "Streamlit Secrets")
+    st.write("Environment keys:", [k for k in os.environ if "HF_" in k])
 
 '''
 # DBT DATABASE
