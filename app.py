@@ -26,8 +26,7 @@ st.sidebar.markdown(f"Last test: {datetime.now().strftime('%H:%M:%S')}")
 # Try all possible secret locations
 token = (
     st.secrets.get("HF_TOKEN") or  # Streamlit Sharing
-    os.getenv("HF_TOKEN") or       # GitHub Secrets
-    "hf_your_token_here"           # Fallback for testing (REMOVE IN PRODUCTION)
+    os.getenv("HF_TOKEN")          # GitHub Secrets
 )
 
 debug_print("Token prefix", token[:4] + "..." if token else "None")
