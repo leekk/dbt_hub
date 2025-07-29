@@ -4,6 +4,19 @@ import os
 import time
 from datetime import datetime
 
+import streamlit as st
+st.write("## Secret Injection Test")
+
+if hasattr(st, "secrets"):
+    st.write("Secrets object exists")
+    if "HF_TOKEN" in st.secrets:
+        st.success(f"✅ Token found: {st.secrets['HF_TOKEN'][:8]}...")
+    else:
+        st.error("❌ HF_TOKEN missing in st.secrets")
+        st.write("Actual secrets:", st.secrets)
+else:
+    st.error("❌ st.secrets doesn't exist (platform failure)")
+
 # ======================
 # CONSTANTS
 # ======================
