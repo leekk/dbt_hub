@@ -4,58 +4,140 @@ from difflib import get_close_matches
 #from transformers import AutoModelForCausalLM, AutoTokenizer
 #import torch
 
+from datetime import datetime
+
 from huggingface_hub import InferenceClient
 import os
 
-# Initialize the FREE client (paste your token here)
-client = InferenceClient(
-    token=os.getenv("HF_TOKEN"),
-    model="mistralai/Mistral-7B-Instruct-v0.1"  # Official model name
+import time
+# ======================
+# Debugging Setup
+# ======================
+def debug_print(label, value):
+    """Helper function for debug output"""
+    st.sidebar.write(f"🔍 {label}:", value)
+
+st.sidebar.title("Debug Panel")
+st.sidebar.markdown(f"Last test: {datetime.now().strftime('%H:%M:%S')}")
+
+# ======================
+# Token Loading
+# ======================
+# Try all possible secret locations
+token = (
+    st.secrets.get("HF_TOKEN") or  # Streamlit Sharing
+    os.getenv("HF_TOKEN") or       # GitHub Secrets
+    "hf_your_token_here"           # Fallback for testing (REMOVE IN PRODUCTION)
 )
 
-if not os.getenv("HF_TOKEN"):
-    st.error("""
-    ❌ Token not loaded. Check:
-    1. GitHub Secrets (for deployment)
-    2. .env file (for local testing)
+debug_print("Token prefix", token[:4] + "..." if token else "None")
+
+if not token or not token.startswith("hf_"):
+    st.error(f"""
+    ❌ Token loading failed. Check:
+    1. Streamlit Sharing: Settings → Secrets → Add `[secrets] HF_TOKEN="hf_..."`
+    2. GitHub: Repo Settings → Secrets → Actions → Add `HF_TOKEN`
+    3. Token must start with 'hf_'
+    Current value: {token[:10] + '...' if token else 'None'}
     """)
     st.stop()
 
-with st.expander("🔒 Connection Test", expanded=False):
-    try:
-        test_response = client.text_generation(
-            prompt="Test",
-            max_new_tokens=1
-        )
-        st.success(f"✅ API Connected | Response: '{test_response}'")
-    except Exception as e:
-        st.error(f"❌ Connection failed: {str(e)}")
-        st.stop()
+# ======================
+# API Client Setup
+# ======================
+try:
+    client = InferenceClient(
+        token=token,
+        model="mistralai/Mistral-7B-Instruct-v0.1",
+        timeout=30  # Increase timeout for free tier
+    )
+    debug_print("Client initialized", "✅")
+except Exception as e:
+    st.error(f"❌ Client initialization failed: {str(e)}")
+    st.stop()
 
+# ======================
+# Connection Test
+# ======================
+with st.expander("🚦 Connection Tests", expanded=True):
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("API Status Check")
+        try:
+            api_status = requests.get(
+                "https://api-inference.huggingface.co/status",
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=10
+            ).json()
+            st.json(api_status)
+            debug_print("API Status", "✅ Online")
+        except Exception as e:
+            st.error(f"API Status Check Failed: {str(e)}")
+            debug_print("API Status", "❌ Offline")
+
+    with col2:
+        st.subheader("Model Test")
+        try:
+            time.sleep(1)  # Rate limit protection
+            test_response = client.text_generation(
+                prompt="Hello",
+                max_new_tokens=1
+            )
+            st.success(f"Model Response: '{test_response}'")
+            debug_print("Model Test", "✅ Working")
+        except Exception as e:
+            st.error(f"Model Test Failed: {str(e)}")
+            debug_print("Model Test", "❌ Failed")
+
+# ======================
+# Main Application
+# ======================
 def generate_dbt_response(user_input):
-    """Generate therapist response using free API"""
-    prompt = f"""Act as a DBT therapist. Provide a concise response and recommend one worksheet for: {user_input}
-    Response format:
-    [Empathy statement]
-    [Skill suggestion]
-    Worksheet: [Name] - [Brief description]"""
+    """Generate therapist response with robust error handling"""
+    prompt = f"""Act as a DBT therapist. Respond to: {user_input}
+    Format:
+    1. [Empathy statement]
+    2. [Skill suggestion]
+    3. Worksheet: [Name] - [Description]"""
     
     try:
-        return client.text_generation(
+        time.sleep(1.5)  # Avoid rate limiting
+        response = client.text_generation(
             prompt=prompt,
             max_new_tokens=150,
-            temperature=0.7
+            temperature=0.7,
+            do_sample=True
         )
+        return response
     except Exception as e:
-        return f"⚠️ Error: {str(e)}\n\n(Try again later or contact support)"
+        return f"""⚠️ System Temporarily Unavailable
+        Sample DBT Response:
+        1. I hear you're feeling distressed
+        2. Try the TIPP skill: Temperature change, Intense exercise
+        3. Worksheet: Emotion Regulation - Changing Emotional Responses
+        [Error: {str(e)}]"""
+
+# ======================
+# Chat Interface
+# ======================
+st.title("DBT Therapy Assistant")
+st.caption("Note: This is an AI tool, not professional medical advice")
 
 if user_input := st.chat_input("How can I help today?"):
-    with st.spinner("🧠 Analyzing your request..."):
+    with st.spinner("🧠 Processing your request..."):
         response = generate_dbt_response(user_input)
     
     with st.chat_message("assistant"):
         st.write(response)
-        st.caption("Disclaimer: This is an AI tool, not professional medical advice.")
+        st.caption("Disclaimer: Consult a human therapist for clinical care")
+
+# ======================
+# Debug Footer
+# ======================
+st.sidebar.markdown("---")
+st.sidebar.write("Environment Variables:")
+st.sidebar.json({k:v for k,v in os.environ.items() if "HF_" in k or "SECRET" in k})
 
 
 '''
