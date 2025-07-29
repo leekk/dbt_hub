@@ -13,6 +13,8 @@ import time
 # ======================
 # Debugging Setup
 # ======================
+st.write("Streamlit secrets:", st.secrets)  # Should show HF_TOKEN
+st.write("Environment vars:", dict(os.environ))  # Look for HF_TOKEN
 def debug_print(label, value):
     """Helper function for debug output"""
     st.sidebar.write(f"🔍 {label}:", value)
