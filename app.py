@@ -6,7 +6,7 @@ from huggingface_hub import InferenceClient
 
 st.title("🧠 DBT Chatbot - SmolLM2 Demo")
 
-client = InferenceClient("HuggingFaceTB/SmolLM2-1.7B-Instruct")
+client = InferenceClient("HuggingFaceTB/SmolLM2-360M-Instruct")
 
 prompt = st.chat_input("Pose-moi une question sur la DBT…")
 if prompt:
