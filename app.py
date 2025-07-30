@@ -41,7 +41,7 @@ def show_debug_info():
 def generate_ai_response(user_input: str, conversation_history: list) -> str:
     """Generate responses using Mistral-7B-Instruct-v0.3"""
     try:
-        API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
+        API_URL = "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3"
         headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
         
         # Build a simple text prompt (not JSON)
