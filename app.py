@@ -1,37 +1,48 @@
 import streamlit as st
-from huggingface_hub import InferenceClient
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
-# Initialize client (make sure HF_TOKEN is in Streamlit secrets)
-client = InferenceClient(token=st.secrets["HF_TOKEN"])
+# Load model & tokenizer
+@st.cache_resource  # so it doesn't reload every time
+def load_model():
+    model_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    model = AutoModelForCausalLM.from_pretrained(model_id)
+    return pipeline("text-generation", model=model, tokenizer=tokenizer)
 
-st.title("Simple Generative Chatbot")
+chatbot = load_model()
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# Streamlit UI
+st.title("🦙 TinyLlama Chatbot")
+st.write("Ask anything!")
+
+# Chat state
+if "history" not in st.session_state:
+    st.session_state.history = []
+
+# User input
+user_input = st.text_input("You:", key="input")
+
+if user_input:
+    # Build prompt
+    prompt = "<|system|>\nYou are a helpful assistant.\n"
+    for i, (u, a) in enumerate(st.session_state.history):
+        prompt += f"<|user|>\n{u}\n<|assistant|>\n{a}\n"
+    prompt += f"<|user|>\n{user_input}\n<|assistant|>\n"
+
+    # Generate response
+    with st.spinner("Thinking..."):
+        response = chatbot(prompt, max_new_tokens=100, do_sample=True, temperature=0.7)[0]["generated_text"]
+
+    # Parse output
+    response_text = response.split("<|assistant|>")[-1].strip()
+
+    # Save to history
+    st.session_state.history.append((user_input, response_text))
 
 # Display chat history
-for msg in st.session_state.messages:
-    st.chat_message(msg["role"]).write(msg["content"])
-
-if prompt := st.chat_input("Say something:"):
-    # Add user message to history
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.chat_message("user").write(prompt)
-    
-    # Generate response
-    with st.chat_message("assistant"):
-        with st.spinner("Generating..."):
-            try:
-                response = client.text_generation(
-                    prompt=f"Respond to this like a helpful assistant: {prompt}",
-                    max_new_tokens=200,
-                    temperature=0.7
-                )
-                st.write(response)
-                st.session_state.messages.append({"role": "assistant", "content": response})
-            except Exception as e:
-                st.error(f"Failed to generate: {str(e)}")
-
+for user_msg, bot_msg in st.session_state.history:
+    st.markdown(f"**You:** {user_msg}")
+    st.markdown(f"**Bot:** {bot_msg}")
 
 '''
 # DBT DATABASE
