@@ -30,24 +30,25 @@ def generate_response(user_input):
     
     Speak conversationally, like a human therapist would."""
 
+    attempt = 1
     while True:  # Will keep retrying indefinitely
         try:
-            response = client.text_generation(
-                prompt=prompt,
-                max_new_tokens=300,
-                temperature=0.9,  # More creative
-                do_sample=True
-            )
-            
-            if len(response.strip()) > 50:  # Minimum length check
-                return response
+            with st.spinner(f"Thinking deeply... (Attempt {attempt})"):
+                response = client.text_generation(
+                    prompt=prompt,
+                    max_new_tokens=300,
+                    temperature=0.9,  # More creative
+                    do_sample=True
+                )
                 
+                if len(response.strip()) > 50:  # Minimum length check
+                    return response
+                    
         except Exception as e:
             pass  # Silently retry
             
-        # Show live updating status
-        with st.spinner(f"Thinking deeply... (Attempt {attempt})"):
-            time.sleep(5)  # Wait longer between attempts
+        attempt += 1
+        time.sleep(5)  # Wait longer between attempts
 
 # Streamlit UI
 st.title("DBT Therapy Companion")
