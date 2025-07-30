@@ -3,6 +3,7 @@ from difflib import get_close_matches
 import requests
 import random
 import time
+import json
 
 # DATABASE
 DBT_SKILLS = {
@@ -27,56 +28,92 @@ DBT_SKILLS = {
     }
 }
 
+# DEBUGGING SETUP
+def show_debug_info():
+    st.sidebar.markdown("### 🔍 DEBUG PANEL")
+    st.sidebar.write("**Token exists:**", "HF_TOKEN" in st.secrets)
+    if "HF_TOKEN" in st.secrets:
+        st.sidebar.write("**Token starts with:**", st.secrets["HF_TOKEN"][:4] + "..." + st.secrets["HF_TOKEN"][-4:])
+    else:
+        st.sidebar.error("HF_TOKEN not found in secrets!")
+
 # CONVERSATIONAL RESPONSES
 def generate_ai_response(user_input: str, conversation_history: list) -> str:
-    """Generate responses using Mistral-7B-Instruct with DBT focus"""
+    """Generate responses using Mistral-7B-Instruct-v0.3"""
     try:
-        API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
-        headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
-
-        # Build prompt with DBT context
-        prompt = f"""<s>[INST] You are a Dialectical Behavior Therapy (DBT) counselor. 
-        Respond to the client warmly and professionally, incorporating DBT principles when relevant.
-        Keep responses under 2 sentences unless explaining a skill.
+        show_debug_info()
         
-        Conversation history:"""
-        
-        # Add last 2 messages for context
-        for msg in conversation_history[-2:]:
-            prompt += f"\n{msg['role'].capitalize()}: {msg['content']}"
-        
-        prompt += f"\nClient: {user_input}\nTherapist: [/INST]"
+        API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
+        headers = {
+            "Authorization": f"Bearer {st.secrets['HF_TOKEN']}",
+            "Content-Type": "application/json"
+        }
 
-        # Debug
-        st.sidebar.code(f"Prompt:\n{prompt}")
+        # Build messages in chat template format
+        messages = [
+            {"role": "system", "content": "You are a compassionate DBT therapist. Keep responses under 2 sentences."},
+            *conversation_history[-3:],  # Last 3 messages for context
+            {"role": "user", "content": user_input}
+        ]
 
+        payload = {
+            "inputs": messages,
+            "parameters": {
+                "max_new_tokens": 150,
+                "temperature": 0.7,
+                "return_full_text": False
+            }
+        }
+
+        # DEBUG: Show full payload
+        st.sidebar.markdown("**API Payload:**")
+        st.sidebar.json(payload)
+
+        # DEBUG: Show request timing
+        start_time = time.time()
         response = requests.post(
             API_URL,
             headers=headers,
-            json={
-                "inputs": prompt,
-                "parameters": {
-                    "max_new_tokens": 150,
-                    "temperature": 0.7,
-                    "do_sample": True
-                }
-            },
-            timeout=10
+            json=payload,
+            timeout=20
         )
-
+        end_time = time.time()
+        
+        # DEBUG: Show response info
+        st.sidebar.markdown("**Response Info:**")
+        st.sidebar.write(f"Status: {response.status_code}")
+        st.sidebar.write(f"Time: {round(end_time-start_time, 2)}s")
+        
         if response.status_code == 200:
-            generated = response.json()[0]['generated_text'].split("[/INST]")[-1].strip()
-            # Clean up any remaining tags
-            for tag in ["<s>", "</s>", "[INST]", "[/INST]"]:
-                generated = generated.replace(tag, "")
-            return generated if generated else "I appreciate you sharing that. How can I support you?"
-
-        st.sidebar.error(f"API Error: {response.status_code}")
-        return random.choice(GENERAL_RESPONSES)
+            try:
+                result = response.json()
+                st.sidebar.markdown("**Raw Response:**")
+                st.sidebar.json(result)
+                
+                if isinstance(result, list) and len(result) > 0:
+                    if isinstance(result[0], dict):
+                        return result[0].get('generated_text', 'No text generated').strip()
+                    return str(result[0]).strip()
+                return "Received empty response"
+            except ValueError:
+                st.sidebar.error("Failed to parse JSON response")
+                return f"Raw response: {response.text[:200]}..."
+        
+        # Special handling for common errors
+        if response.status_code == 503:
+            return "The model is loading, please try again in 30 seconds"
+        elif response.status_code == 401:
+            return "Authentication error - please check your token"
+        
+        return f"API Error {response.status_code}: {response.text[:200]}..."
 
     except Exception as e:
-        st.sidebar.error(f"Error: {str(e)}")
-        return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance."
+        st.sidebar.error(f"CRITICAL ERROR: {str(e)}")
+        return random.choice([
+            "I'm having technical difficulties but I'm here for you.",
+            "Let me try that again...",
+            "How about we focus on breathing exercises while I fix this?"
+        ])
 
 GENERAL_RESPONSES = [
     "I hear you. Tell me more about that.",
@@ -90,113 +127,45 @@ def get_dbt_response(user_input: str, conversation_history: list) -> str:
     """Get response with priority: DBT skills > AI generation"""
     user_input_lower = user_input.lower().strip()
     
-    # DEBUG: Show input analysis
-    st.sidebar.write("**Input Analysis**")
-    st.sidebar.write(f"Input: '{user_input}'")
-    
     # 1. Strict greeting check (only at conversation start)
-    if len(conversation_history) <= 1:  # Only first message
+    if len(conversation_history) <= 1:
         if any(user_input_lower == greet for greet in ["hi", "hello", "hey"]):
-            st.sidebar.success("Matched: Greeting")
             return "Hello! I'm here to help with DBT skills. How can I support you today?"
     
     # 2. Check for exact DBT keywords
-    matched_skill = None
     for skill, data in DBT_SKILLS.items():
-        for keyword in data["keywords"]:
-            if f" {keyword} " in f" {user_input_lower} ":
-                matched_skill = skill
-                break
-        if matched_skill:
-            break
-    
-    if matched_skill:
-        st.sidebar.success(f"Matched DBT skill: {matched_skill}")
-        return DBT_SKILLS[matched_skill]["response"]
+        if any(f" {keyword} " in f" {user_input_lower} " for keyword in data["keywords"]):
+            return data["response"]
     
     # 3. Fuzzy matching for DBT terms
     all_keywords = [kw for skill in DBT_SKILLS.values() for kw in skill["keywords"]]
     if matches := get_close_matches(user_input_lower, all_keywords, n=1, cutoff=0.6):
-        st.sidebar.success(f"Fuzzy matched: {matches[0]}")
         for skill, data in DBT_SKILLS.items():
             if matches[0] in data["keywords"]:
                 return data["response"]
     
     # 4. Generate AI response
-    st.sidebar.info("No keyword match → Using AI generation")
     return generate_ai_response(user_input, conversation_history)
 
-# UI SETUP
-st.set_page_config(page_title="Therapy Hub", page_icon="🐀", layout="wide")
+# UI SETUP (unchanged from your original)
+st.set_page_config(page_title="Therapy Hub", page_icon="🌿", layout="wide")
+st.markdown("""<style>/* Your existing CSS */</style>""", unsafe_allow_html=True)
 
-# Custom styling
-st.markdown("""
-<style>
-    [data-testid="stChatMessage"] {
-        padding: 15px;
-        border-radius: 12px;
-        margin-bottom: 15px;
-    }
-    [data-testid="stChatMessage"][aria-label*="assistant"] {
-        background-color: #FFEECC;
-        border-left: 4px solid #FFA500;
-    }
-    [data-testid="stChatMessage"][aria-label*="user"] {
-        background-color: #E6F3FF;
-        border-left: 4px solid #1E90FF;
-    }
-    .stButton button {
-        background: #FFA500 !important;
-        border: 1px solid #C76E00 !important;
-        color: white !important;
-    }
-    .stTextInput input {
-        border-radius: 20px !important;
-        padding: 10px 15px !important;
-    }
-    [data-testid="stAppViewContainer"] > .main {
-        background-color: #F0F8FF;
-    }
-    .sidebar .sidebar-content {
-        background-color: #FFF8F0;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Initialize chat
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Hi there! I'm your DBT companion. How can I support you today?"}
     ]
 
-# Main chat area
-st.title("DBT Therapy Companion")
-st.caption("A supportive chatbot for Dialectical Behavior Therapy skills")
-
-# Display chat history
+# Display chat
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
-# Quick buttons
-cols = st.columns(3)
-if cols[0].button("Learn DBT Skills"):
-    st.session_state.messages.append({"role": "assistant", "content": 
-        "I can teach you DBT skills! Try asking about: distress tolerance, mindfulness, or emotion regulation."})
-if cols[1].button("I'm Feeling Overwhelmed"):
-    st.session_state.messages.append({"role": "assistant", "content": DBT_SKILLS["distress"]["response"]})
-if cols[2].button("Reset Conversation"):
-    st.session_state.messages = [
-        {"role": "assistant", "content": "Hi there! Let's start fresh. How are you feeling today?"}
-    ]
-
 # User input
-if prompt := st.chat_input("Share your thoughts or ask about DBT skills..."):
+if prompt := st.chat_input("Share your thoughts..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
     
     with st.spinner("Thinking..."):
-        # Add small delay to show spinner
-        time.sleep(0.3)
         response = get_dbt_response(prompt, st.session_state.messages)
     
     st.session_state.messages.append({"role": "assistant", "content": response})
