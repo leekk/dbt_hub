@@ -41,79 +41,61 @@ def show_debug_info():
 def generate_ai_response(user_input: str, conversation_history: list) -> str:
     """Generate responses using Mistral-7B-Instruct-v0.3"""
     try:
-        show_debug_info()
-        
         API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
-        headers = {
-            "Authorization": f"Bearer {st.secrets['HF_TOKEN']}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
+        
+        # Build a simple text prompt (not JSON)
+        history_text = "\n".join(
+            f"{msg['role']}: {msg['content']}" 
+            for msg in conversation_history[-3:]  # Last 3 messages
+        )
+        prompt = f"""You are a compassionate DBT therapist. Respond to the client in 1-2 sentences.
+        
+        Conversation history:
+        {history_text}
+        
+        Client: {user_input}
+        Therapist:"""
+        
+        # DEBUG: Show the prompt
+        st.sidebar.code(f"Prompt:\n{prompt}")
+        st.sidebar.write("Sending text prompt to:", API_URL)
 
-        # Build messages in chat template format
-        messages = [
-            {"role": "system", "content": "You are a compassionate DBT therapist. Keep responses under 2 sentences."},
-            *conversation_history[-3:],  # Last 3 messages for context
-            {"role": "user", "content": user_input}
-        ]
-
-        payload = {
-            "inputs": messages,
-            "parameters": {
-                "max_new_tokens": 150,
-                "temperature": 0.7,
-                "return_full_text": False
-            }
-        }
-
-        # DEBUG: Show full payload
-        st.sidebar.markdown("**API Payload:**")
-        st.sidebar.json(payload)
-
-        # DEBUG: Show request timing
-        start_time = time.time()
         response = requests.post(
             API_URL,
             headers=headers,
-            json=payload,
-            timeout=20
+            json={
+                "inputs": prompt,  # Send as simple text input
+                "parameters": {
+                    "max_new_tokens": 150,
+                    "temperature": 0.7,
+                    "do_sample": True
+                }
+            },
+            timeout=15
         )
-        end_time = time.time()
-        
-        # DEBUG: Show response info
-        st.sidebar.markdown("**Response Info:**")
-        st.sidebar.write(f"Status: {response.status_code}")
-        st.sidebar.write(f"Time: {round(end_time-start_time, 2)}s")
+
+        # DEBUG: Show full response info
+        st.sidebar.write("Status code:", response.status_code)
+        st.sidebar.write("Response text:", response.text[:500] + "...")
         
         if response.status_code == 200:
-            try:
-                result = response.json()
-                st.sidebar.markdown("**Raw Response:**")
-                st.sidebar.json(result)
+            result = response.json()
+            if isinstance(result, list) and len(result) > 0:
+                # Extract generated text
+                generated = result[0].get('generated_text', '')
                 
-                if isinstance(result, list) and len(result) > 0:
-                    if isinstance(result[0], dict):
-                        return result[0].get('generated_text', 'No text generated').strip()
-                    return str(result[0]).strip()
-                return "Received empty response"
-            except ValueError:
-                st.sidebar.error("Failed to parse JSON response")
-                return f"Raw response: {response.text[:200]}..."
+                # Remove the original prompt from the response
+                if prompt in generated:
+                    generated = generated.replace(prompt, "")
+                    
+                return generated.strip() or "I'm here for you. What would you like to talk about?"
         
-        # Special handling for common errors
-        if response.status_code == 503:
-            return "The model is loading, please try again in 30 seconds"
-        elif response.status_code == 401:
-            return "Authentication error - please check your token"
-        
-        return f"API Error {response.status_code}: {response.text[:200]}..."
+        return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance."
 
     except Exception as e:
-        st.sidebar.error(f"CRITICAL ERROR: {str(e)}")
-        return random.choice([
-            "I'm having technical difficulties but I'm here for you.",
-            "Let me try that again...",
-            "How about we focus on breathing exercises while I fix this?"
-        ])
+        st.sidebar.error(f"Error: {str(e)}")
+        return random.choice(GENERAL_RESPONSES)
 
 GENERAL_RESPONSES = [
     "I hear you. Tell me more about that.",
