@@ -1,20 +1,11 @@
 import streamlit as st
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from huggingface_hub import InferenceClient
 
-# Chargement du checkpoint depuis secrets
-checkpoint = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
-device = "cuda" if torch.cuda.is_available() else "cpu"
+# Model hosted by HuggingFace, runs remotely
+MODEL = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+client = InferenceClient(model=MODEL)
 
-@st.cache_resource
-def load_model():
-    tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-    model = AutoModelForCausalLM.from_pretrained(checkpoint).to(device)
-    return tokenizer, model
-
-tokenizer, model = load_model()
-
-st.title("🧠 DBT Chatbot - SmolLM2 Demo")
+st.title("🧠 DBT Chatbot - SmolLM2 (Free HuggingFace API Version)")
 
 prompt = st.chat_input("Pose-moi une question sur la DBT…")
 if prompt:
@@ -22,22 +13,22 @@ if prompt:
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        messages = [{"role": "user", "content": prompt}]
-        input_text = tokenizer.apply_chat_template(messages, tokenize=False)
-        inputs = tokenizer.encode(input_text, return_tensors="pt").to(device)
+        with st.spinner("Je réfléchis..."):
+            # Optional: prepend prompt template for better answers
+            full_prompt = f"[INST] {prompt} [/INST]"
 
-        outputs = model.generate(
-            inputs,
-            max_new_tokens=128,
-            temperature=0.7,
-            top_p=0.9,
-            do_sample=True
-        )
+            response = client.text_generation(
+                full_prompt,
+                max_new_tokens=256,
+                temperature=0.7,
+                top_p=0.9,
+                repetition_penalty=1.1,
+                do_sample=True,
+            )
 
-        output_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        # Nettoyage : on coupe le prompt de l'output
-        response = output_text.split(prompt, 1)[-1].strip()
-        st.markdown(response)
+            # Show just the reply (trim instruction prompt)
+            cleaned = response.split(prompt, 1)[-1].strip()
+            st.markdown(cleaned)
 '''
 # DBT DATABASE
 DBT_SKILLS = {
