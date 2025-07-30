@@ -29,27 +29,27 @@ DBT_SKILLS = {
 
 # CONVERSATIONAL RESPONSES
 def generate_ai_response(user_input: str, conversation_history: list) -> str:
-    """Generate AI response using HuggingFace API"""
+    """Generate responses using Mistral-7B-Instruct with DBT focus"""
     try:
-        # Switch to a more reliable chat model
         API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
         headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
+
+        # Build prompt with DBT context
+        prompt = f"""<s>[INST] You are a Dialectical Behavior Therapy (DBT) counselor. 
+        Respond to the client warmly and professionally, incorporating DBT principles when relevant.
+        Keep responses under 2 sentences unless explaining a skill.
         
-        # Build conversation history in instruction format
-        conversation = "\n".join(
-            f"{msg['role'].capitalize()}: {msg['content']}" 
-            for msg in conversation_history[-4:]  # Keep last 4 messages for context
-        )
+        Conversation history:"""
         
-        prompt = f"""<s>[INST] You are a compassionate DBT therapist. Continue this conversation naturally:
+        # Add last 2 messages for context
+        for msg in conversation_history[-2:]:
+            prompt += f"\n{msg['role'].capitalize()}: {msg['content']}"
         
-{conversation}
-User: {user_input}
-Therapist: [/INST]"""
-        
-        # DEBUG
-        st.sidebar.write("**Prompt:**", prompt)
-        
+        prompt += f"\nClient: {user_input}\nTherapist: [/INST]"
+
+        # Debug
+        st.sidebar.code(f"Prompt:\n{prompt}")
+
         response = requests.post(
             API_URL,
             headers=headers,
@@ -58,29 +58,25 @@ Therapist: [/INST]"""
                 "parameters": {
                     "max_new_tokens": 150,
                     "temperature": 0.7,
-                    "return_full_text": False
+                    "do_sample": True
                 }
             },
             timeout=10
         )
-        
+
         if response.status_code == 200:
-            result = response.json()
-            if isinstance(result, list) and len(result) > 0:
-                generated = result[0].get('generated_text', '').strip()
-                # Clean up the response
-                if "Therapist:" in generated:
-                    generated = generated.split("Therapist:")[-1].strip()
-                if "[/INST]" in generated:
-                    generated = generated.split("[/INST]")[-1].strip()
-                return generated if generated else random.choice(GENERAL_RESPONSES)
-        
-        st.sidebar.error(f"API Error: {response.status_code} - {response.text[:200]}")
+            generated = response.json()[0]['generated_text'].split("[/INST]")[-1].strip()
+            # Clean up any remaining tags
+            for tag in ["<s>", "</s>", "[INST]", "[/INST]"]:
+                generated = generated.replace(tag, "")
+            return generated if generated else "I appreciate you sharing that. How can I support you?"
+
+        st.sidebar.error(f"API Error: {response.status_code}")
         return random.choice(GENERAL_RESPONSES)
-        
+
     except Exception as e:
         st.sidebar.error(f"Error: {str(e)}")
-        return random.choice(GENERAL_RESPONSES)
+        return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance."
 
 GENERAL_RESPONSES = [
     "I hear you. Tell me more about that.",
