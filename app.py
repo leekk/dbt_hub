@@ -27,27 +27,45 @@ DBT_SKILLS = {
     }
 }
 
-DBT_FALLBACK_RESPONSES = [
-    "Let's practice the 'Observe' skill - what are you noticing right now?",
-    "This sounds like a good moment for some paced breathing. Want to try it with me?",
-    "I'm here with you. Would describing your feelings help right now?",
-    "Remember the 'STOP' skill: Stop, Take a step back, Observe, Proceed mindfully"
+import streamlit as st
+from difflib import get_close_matches
+import requests
+import random
+
+# DATABASE
+DBT_SKILLS = {
+    "distress": {
+        "keywords": ["overwhelmed", "panic", "crisis", "tipp", "stress"],
+        "response": """**🚨 TIPP Skills (Crisis Survival):**
+1. 🌡️ **Temperature** - Splash cold water on your face
+2. 🏃 **Intense Exercise** - 1 minute of vigorous activity
+3. 🌬️ **Paced Breathing** - Inhale 4s → Hold 4s → Exhale 6s
+4. 💪 **Paired Muscle Relaxation** - Tense then release muscles"""
+    },
+    # ... (keep your other skill definitions)
+}
+
+# More varied fallback responses
+GENERAL_RESPONSES = [
+    "I hear you. Tell me more about what's on your mind.",
+    "That's interesting. How does that make you feel?",
+    "I'm listening. Would you like to explore this further?",
+    "Thanks for sharing that. What else is coming up for you?"
 ]
 
-def get_ai_fallback_response(user_input: str) -> str:
-    """Get a DBT-focused response from HuggingFace API"""
+def generate_ai_response(user_input: str) -> str:
+    """Generate a more natural response using AI"""
     try:
         API_URL = "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM3-3B"
         headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
         
-        prompt = f"""As a DBT therapist, respond to this client statement:
-        Client: "{user_input}"
+        prompt = f"""You're a compassionate DBT therapist. The client says: "{user_input}"
         
-        Respond with:
-        1. Brief validation (1 sentence)
-        2. One relevant DBT skill suggestion
-        3. Open-ended question
-        Keep it under 3 sentences total."""
+        Respond naturally while:
+        1. Validating their experience
+        2. Keeping it conversational
+        3. Optionally suggesting a DBT skill if relevant
+        Respond in 1-2 short sentences."""
         
         response = requests.post(
             API_URL,
@@ -57,37 +75,40 @@ def get_ai_fallback_response(user_input: str) -> str:
         )
         
         if response.status_code == 200:
-            return response.json().get('generated_text', 
-                  "I hear you. Let's try some mindfulness exercises together. 🌿")
+            generated = response.json().get('generated_text', '').strip()
+            # Add a fallback if the generated text is empty
+            return generated if generated else random.choice(GENERAL_RESPONSES)
         
-        return random.choice(DBT_FALLBACK_RESPONSES)
+        return random.choice(GENERAL_RESPONSES)
         
     except Exception as e:
         st.error(f"API Error: {str(e)}")
-        return random.choice(DBT_FALLBACK_RESPONSES)
+        return random.choice(GENERAL_RESPONSES)
 
 def get_dbt_response(user_input: str) -> str:
-    """Get appropriate DBT response based on user input"""
+    """Get response with priority: DBT skills > AI > fallback"""
     user_input = user_input.lower()
     
-    # Greetings
+    # 1. Check for greetings
     if any(greet in user_input for greet in ["hi","hello","hey"]):
         return "Hello! I'm here to help with DBT skills. How can I support you today?"
     
-    # Exact keyword matching
+    # 2. Check for exact DBT keywords
     for skill, data in DBT_SKILLS.items():
         if any(keyword in user_input for keyword in data["keywords"]):
             return data["response"]
     
-    # Fuzzy matching
+    # 3. Check for similar DBT keywords
     all_keywords = [kw for skill in DBT_SKILLS.values() for kw in skill["keywords"]]
     if matches := get_close_matches(user_input, all_keywords, n=1, cutoff=0.6):
         for skill, data in DBT_SKILLS.items():
             if matches[0] in data["keywords"]:
                 return data["response"]
     
-    # AI fallback
-    return get_ai_fallback_response(user_input)
+    # 4. Generate AI response for everything else
+    return generate_ai_response(user_input)
+
+# ... (rest of your UI code remains the same)
 
 # BELOW IS THE UI
 st.set_page_config(page_title="Therapy Hub", page_icon="🐀")
