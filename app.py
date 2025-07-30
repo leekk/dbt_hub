@@ -1,34 +1,7 @@
 import streamlit as st
-from huggingface_hub import InferenceClient
+st.title("It works!")
 
-# Model hosted by HuggingFace, runs remotely
-MODEL = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
-client = InferenceClient(model=MODEL)
 
-st.title("🧠 DBT Chatbot - SmolLM2 (Free HuggingFace API Version)")
-
-prompt = st.chat_input("Pose-moi une question sur la DBT…")
-if prompt:
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        with st.spinner("Je réfléchis..."):
-            # Optional: prepend prompt template for better answers
-            full_prompt = f"[INST] {prompt} [/INST]"
-
-            response = client.text_generation(
-                full_prompt,
-                max_new_tokens=256,
-                temperature=0.7,
-                top_p=0.9,
-                repetition_penalty=1.1,
-                do_sample=True,
-            )
-
-            # Show just the reply (trim instruction prompt)
-            cleaned = response.split(prompt, 1)[-1].strip()
-            st.markdown(cleaned)
 '''
 # DBT DATABASE
 DBT_SKILLS = {
