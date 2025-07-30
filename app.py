@@ -1,40 +1,52 @@
 import streamlit as st
-from huggingface_hub import InferenceClient
+from transformers import pipeline
 
-# Title
-st.title("🦙 TinyLlama Cloud Chatbot")
+st.set_page_config(page_title="Maya: DBT Coach", layout="wide")
+st.title("Maya: Your DBT Coach 🤖")
 
-# Load inference client (model runs on Hugging Face's servers, not locally)
-client = InferenceClient("TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+# Load the Zephyr model (slow on first run if not cached)
+@st.cache_resource
+def load_model():
+    return pipeline(
+        "text-generation",
+        model="HuggingFaceH4/zephyr-7b-beta",
+        torch_dtype=torch.bfloat16,
+        device_map="auto"
+    )
 
-# Store chat history
-if "history" not in st.session_state:
-    st.session_state.history = []
+pipe = load_model()
+
+# System prompt to shape personality + behavior
+system_message = {
+    "role": "system",
+    "content": "You are Maya, a compassionate DBT coach who helps users regulate their emotions and validate themselves. You ask thoughtful questions when needed, and never rush. Use simple, warm language."
+}
+
+# Chat memory (optional, simple list)
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 # User input
-user_input = st.text_input("You:")
+user_input = st.chat_input("How are you feeling today?")
 
 if user_input:
-    # Construct the prompt from history
-    prompt = "<|system|>\nYou are a helpful chatbot.\n"
-    for u, a in st.session_state.history:
-        prompt += f"<|user|>\n{u}\n<|assistant|>\n{a}\n"
-    prompt += f"<|user|>\n{user_input}\n<|assistant|>\n"
-
-    # Generate a reply using Hugging Face Inference API
-    with st.spinner("Thinking..."):
-        response = client.text_generation(prompt, max_new_tokens=150, temperature=0.7, repetition_penalty=1.1)
-
-    # Extract the generated assistant text
-    reply = response.split("<|assistant|>")[-1].strip()
-
     # Add to history
-    st.session_state.history.append((user_input, reply))
+    st.session_state.chat_history.append({"role": "user", "content": user_input})
 
-# Display full chat history
-for u, a in st.session_state.history:
-    st.markdown(f"**You:** {u}")
-    st.markdown(f"**Bot:** {a}")
+    # Compose prompt
+    messages = [system_message] + st.session_state.chat_history
+    prompt = pipe.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+
+    # Generate response
+    outputs = pipe(prompt, max_new_tokens=300, temperature=0.7, top_p=0.95)
+    response = outputs[0]["generated_text"].split("<|assistant|>")[-1].strip()
+
+    st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+# Display messages
+for msg in st.session_state.chat_history:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
 '''
 # DBT DATABASE
