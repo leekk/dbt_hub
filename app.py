@@ -31,6 +31,7 @@ DBT_SKILLS = {
 def generate_ai_response(user_input: str, conversation_history: list) -> str:
     """Generate AI response using HuggingFace API"""
     try:
+        # Correct API endpoint - use inference API pattern
         API_URL = "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM3-3B"
         headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
         
@@ -49,30 +50,38 @@ Therapist:"""
         st.sidebar.write("**Prompt sent to AI:**")
         st.sidebar.code(prompt)
         
+        # Make API request with proper parameters
         response = requests.post(
             API_URL,
             headers=headers,
-            json={"inputs": prompt, "parameters": {"max_new_tokens": 100}},
-            timeout=10
+            json={
+                "inputs": prompt,
+                "parameters": {
+                    "max_new_tokens": 100,
+                    "return_full_text": False  # Only return the generated part
+                }
+            },
+            timeout=15
         )
         
         # DEBUG: Show raw API response
-        st.sidebar.write("**API Response:**", response.status_code)
-        if response.status_code != 200:
-            st.sidebar.error(f"API Error: {response.text}")
+        st.sidebar.write("**API Response Status:**", response.status_code)
+        st.sidebar.write("**Response Text:**", response.text[:200] + "...")
         
         if response.status_code == 200:
             result = response.json()
-            # DEBUG: Show raw API result
             st.sidebar.write("**API JSON:**", result)
             
             if isinstance(result, list) and len(result) > 0:
-                generated_text = result[0].get('generated_text', '')
-                # Extract only the therapist's response
-                if "Therapist:" in generated_text:
-                    return generated_text.split("Therapist:")[-1].strip()
-                return generated_text.strip()
+                if isinstance(result[0], dict) and 'generated_text' in result[0]:
+                    generated_text = result[0]['generated_text'].strip()
+                    # Clean up any extra text after therapist response
+                    if "Client:" in generated_text:
+                        generated_text = generated_text.split("Client:")[0].strip()
+                    return generated_text
+                return result[0].get('generated_text', random.choice(GENERAL_RESPONSES))
         
+        st.sidebar.error(f"API Error: {response.status_code} - {response.text[:200]}")
         return random.choice(GENERAL_RESPONSES)
         
     except Exception as e:
@@ -128,7 +137,7 @@ def get_dbt_response(user_input: str, conversation_history: list) -> str:
     return generate_ai_response(user_input, conversation_history)
 
 # UI SETUP
-st.set_page_config(page_title="Therapy Hub", page_icon="🌿", layout="wide")
+st.set_page_config(page_title="Therapy Hub", page_icon="🐀", layout="wide")
 
 # Custom styling
 st.markdown("""
