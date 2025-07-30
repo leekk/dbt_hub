@@ -1,7 +1,5 @@
 import streamlit as st
-st.title("it works")
 
-'''
 # DBT DATABASE
 DBT_SKILLS = {
     "distress": {
@@ -131,4 +129,4 @@ if prompt := st.chat_input("Ask about DBT skills..."):
     response = get_dbt_response(prompt)
     st.session_state.messages.append({"role": "assistant", "content": response})
     st.chat_message("assistant").write(response)
-'''
+
