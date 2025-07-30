@@ -1,36 +1,20 @@
 import streamlit as st
 from huggingface_hub import InferenceClient
 
-# Title
-st.title("🧠 SmolLM2‑360M Chatbot")
+from transformers import AutoModelForCausalLM, AutoTokenizer
+checkpoint = "HuggingFaceTB/SmolLM2-360M-Instruct"
 
-# HF Client
-client = InferenceClient(model="HuggingFaceTB/SmolLM2-360M-Instruct")
+device = "cuda" # for GPU usage or "cpu" for CPU usage
+tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+# for multiple GPUs install accelerate and do `model = AutoModelForCausalLM.from_pretrained(checkpoint, device_map="auto")`
+model = AutoModelForCausalLM.from_pretrained(checkpoint).to(device)
 
-# Input and Response
-if "history" not in st.session_state:
-    st.session_state.history = []
-
-prompt = st.chat_input("Ask something...")
-
-if prompt:
-    st.session_state.history.append({"role": "user", "content": prompt})
-    
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            # Apply prompt template if needed
-            text = client.text_generation(
-                prompt,
-                max_new_tokens=128,
-                temperature=0.7,
-                top_p=0.9,
-                do_sample=True
-            )
-            st.markdown(text)
-            st.session_state.history.append({"role": "assistant", "content": text})
+messages = [{"role": "user", "content": "What is the capital of France."}]
+input_text=tokenizer.apply_chat_template(messages, tokenize=False)
+print(input_text)
+inputs = tokenizer.encode(input_text, return_tensors="pt").to(device)
+outputs = model.generate(inputs, max_new_tokens=50, temperature=0.2, top_p=0.9, do_sample=True)
+print(tokenizer.decode(outputs[0]))
 
 '''
 # DBT DATABASE
