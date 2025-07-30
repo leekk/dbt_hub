@@ -1,80 +1,36 @@
 import streamlit as st
 from huggingface_hub import InferenceClient
-import time
-import datetime
 
-# Constants
-MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.1"
+# Initialize client (make sure HF_TOKEN is in Streamlit secrets)
+client = InferenceClient(token=st.secrets["HF_TOKEN"])
 
-# Client setup with persistent retries
-@st.cache_resource
-def get_client():
-    return InferenceClient(
-        token=st.secrets["HF_TOKEN"],
-        model=MODEL_NAME,
-        timeout=120  # Very long timeout
-    )
+st.title("Simple Generative Chatbot")
 
-client = get_client()
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-def generate_response(user_input):
-    """Keeps retrying until it gets a real generated response"""
-    prompt = f"""As a warm, compassionate DBT therapist, respond naturally to:
+# Display chat history
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
 
-    User: "{user_input}"
-
-    Provide:
-    - A personalized empathetic statement
-    - One relevant DBT skill
-    - A worksheet suggestion
+if prompt := st.chat_input("Say something:"):
+    # Add user message to history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.chat_message("user").write(prompt)
     
-    Speak conversationally, like a human therapist would."""
-
-    attempt = 1
-    while True:  # Will keep retrying indefinitely
-        try:
-            with st.spinner(f"Thinking deeply... (Attempt {attempt})"):
+    # Generate response
+    with st.chat_message("assistant"):
+        with st.spinner("Generating..."):
+            try:
                 response = client.text_generation(
-                    prompt=prompt,
-                    max_new_tokens=300,
-                    temperature=0.9,  # More creative
-                    do_sample=True
+                    prompt=f"Respond to this like a helpful assistant: {prompt}",
+                    max_new_tokens=200,
+                    temperature=0.7
                 )
-                
-                if len(response.strip()) > 50:  # Minimum length check
-                    return response
-                    
-        except Exception as e:
-            pass  # Silently retry
-            
-        attempt += 1
-        time.sleep(5)  # Wait longer between attempts
-
-# Streamlit UI
-st.title("DBT Therapy Companion")
-st.caption("Real AI-generated responses | Always unique")
-
-if prompt := st.chat_input("What's on your mind today?"):
-    start_time = time.time()
-    
-    with st.chat_message("assistant", avatar="🧠"):
-        placeholder = st.empty()
-        
-        # Initial message to show we're working
-        placeholder.markdown("Let me think carefully about this...")
-        
-        # Get response (will retry forever if needed)
-        response = generate_response(prompt)
-        
-        # Show timing and response
-        response_time = int(time.time() - start_time)
-        placeholder.markdown(f"""
-        {response}
-        
-        *Generated in {response_time}s • {datetime.datetime.now().strftime('%H:%M')}*
-        """)
-
-    st.caption("Always consult a human therapist for personal advice")
+                st.write(response)
+                st.session_state.messages.append({"role": "assistant", "content": response})
+            except Exception as e:
+                st.error(f"Failed to generate: {str(e)}")
 
 
 '''
