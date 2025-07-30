@@ -1,6 +1,27 @@
 import streamlit as st
 st.title("It works!")
 
+import streamlit as st
+from huggingface_hub import InferenceClient
+
+st.title("🧠 DBT Chatbot - SmolLM2 Demo")
+
+client = InferenceClient("HuggingFaceTB/SmolLM2-1.7B-Instruct")
+
+prompt = st.chat_input("Pose-moi une question sur la DBT…")
+if prompt:
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    with st.chat_message("assistant"):
+        with st.spinner("Je réfléchis..."):
+            response = client.text_generation(
+                prompt,
+                max_new_tokens=256,
+                temperature=0.7,
+                top_p=0.9,
+                do_sample=True,
+            )
+            st.markdown(response)
 
 '''
 # DBT DATABASE
