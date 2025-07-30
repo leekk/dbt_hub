@@ -1,63 +1,43 @@
 import streamlit as st
 import torch
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
-st.set_page_config(page_title="Maya: DBT Coach", layout="wide")
-st.title("🧠 Maya: Your DBT Coach")
+# Chargement du checkpoint depuis secrets
+checkpoint = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Load model (safely for CPU environments like Streamlit Cloud)
-pipe = pipeline(
-    "text-generation",
-    model="HuggingFaceH4/zephyr-7b-beta",
-    device_map="auto"
-)
+@st.cache_resource
+def load_model():
+    tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+    model = AutoModelForCausalLM.from_pretrained(checkpoint).to(device)
+    return tokenizer, model
 
-# Define system prompt for DBT-style responses
-system_message = {
-    "role": "system",
-    "content": (
-        "You are Maya, a compassionate DBT coach who helps users regulate their emotions "
-        "and validate themselves. You offer warm, reflective, validating responses. "
-        "You often ask questions to help users understand themselves. "
-        "You never judge or give orders. You are gentle and curious."
-    )
-}
+tokenizer, model = load_model()
 
-# Initialize chat history
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+st.title("🧠 DBT Chatbot - SmolLM2 Demo")
 
-# Chat input
-user_input = st.chat_input("How are you feeling today?")
+prompt = st.chat_input("Pose-moi une question sur la DBT…")
+if prompt:
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-if user_input:
-    st.session_state.chat_history.append({"role": "user", "content": user_input})
+    with st.chat_message("assistant"):
+        messages = [{"role": "user", "content": prompt}]
+        input_text = tokenizer.apply_chat_template(messages, tokenize=False)
+        inputs = tokenizer.encode(input_text, return_tensors="pt").to(device)
 
-    # Build message list
-    messages = [system_message] + st.session_state.chat_history
-
-    # Generate prompt with chat template
-    prompt = pipe.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-
-    # Generate response
-    with st.spinner("Maya is thinking..."):
-        output = pipe(
-            prompt,
-            max_new_tokens=300,
+        outputs = model.generate(
+            inputs,
+            max_new_tokens=128,
             temperature=0.7,
-            top_p=0.95,
+            top_p=0.9,
             do_sample=True
         )
-        response = output[0]["generated_text"].split("<|assistant|>")[-1].strip()
 
-    # Save response
-    st.session_state.chat_history.append({"role": "assistant", "content": response})
-
-# Display chat messages
-for msg in st.session_state.chat_history:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
+        output_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        # Nettoyage : on coupe le prompt de l'output
+        response = output_text.split(prompt, 1)[-1].strip()
+        st.markdown(response)
 '''
 # DBT DATABASE
 DBT_SKILLS = {
