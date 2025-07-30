@@ -1,90 +1,79 @@
 import streamlit as st
 from huggingface_hub import InferenceClient
 import time
-from datetime import datetime
+import datetime
 
-# ===== CONSTANTS =====
+# Constants
 MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.1"
-RATE_LIMIT_DELAY = 2  # More aggressive retry
 
-# ===== SETUP =====
-st.set_page_config(
-    page_title="DBT Therapy Assistant",
-    page_icon="🧠",
-    layout="centered"
-)
-
-# ===== CLIENT INIT =====
+# Client setup with persistent retries
 @st.cache_resource
 def get_client():
     return InferenceClient(
         token=st.secrets["HF_TOKEN"],
         model=MODEL_NAME,
-        timeout=60  # Extended timeout
+        timeout=120  # Very long timeout
     )
 
 client = get_client()
 
-# ===== GENERATIVE ENGINE =====
-def generate_response(user_input, attempt=0):
-    """Always generates original responses with smart retries"""
-    prompt = f"""As a DBT therapist, respond to this conversation starter:
-    
+def generate_response(user_input):
+    """Keeps retrying until it gets a real generated response"""
+    prompt = f"""As a warm, compassionate DBT therapist, respond naturally to:
+
     User: "{user_input}"
-    
+
     Provide:
-    1. A brief empathetic statement (1 sentence)
-    2. One relevant DBT skill (name + brief description)
-    3. A worksheet recommendation (name + purpose)
+    - A personalized empathetic statement
+    - One relevant DBT skill
+    - A worksheet suggestion
     
-    Keep responses natural and conversational. Never use lists or bullet points."""
-    
-    try:
-        response = client.text_generation(
-            prompt=prompt,
-            max_new_tokens=250,
-            temperature=0.8,  # More creative
-            do_sample=True,
-            seed=int(time.time())  # Ensure uniqueness
-        )
-        
-        # Verify response quality
-        if len(response.strip()) > 30 and "DBT" in response:
-            return response
-        elif attempt < 2:  # Auto-retry if response is poor
-            raise ValueError("Response too short")
-        else:
-            return "I'd love to help with that. Could you share more about what you're experiencing?"
+    Speak conversationally, like a human therapist would."""
+
+    while True:  # Will keep retrying indefinitely
+        try:
+            response = client.text_generation(
+                prompt=prompt,
+                max_new_tokens=300,
+                temperature=0.9,  # More creative
+                do_sample=True
+            )
             
-    except Exception as e:
-        if attempt < 2:  # Max 3 attempts total
-            time.sleep(RATE_LIMIT_DELAY * (attempt + 1))
-            return generate_response(user_input, attempt + 1)
-        return """I'm currently helping others but would love to connect soon. 
-        Meanwhile, try practicing paced breathing (inhale 4s, hold 4s, exhale 6s)."""
+            if len(response.strip()) > 50:  # Minimum length check
+                return response
+                
+        except Exception as e:
+            pass  # Silently retry
+            
+        # Show live updating status
+        with st.spinner(f"Thinking deeply... (Attempt {attempt})"):
+            time.sleep(5)  # Wait longer between attempts
 
-# ===== MAIN APP =====
-st.title("DBT Therapy Assistant")
-st.caption("Generative AI support | Always original responses")
+# Streamlit UI
+st.title("DBT Therapy Companion")
+st.caption("Real AI-generated responses | Always unique")
 
-if prompt := st.chat_input("What would you like to explore today?"):
-    with st.spinner("Crafting a thoughtful response..."):
-        response = generate_response(prompt)
+if prompt := st.chat_input("What's on your mind today?"):
+    start_time = time.time()
     
     with st.chat_message("assistant", avatar="🧠"):
-        st.write(response)
-        st.divider()
-        st.caption("""
-        Note: Responses are generated in real-time
-        • These are conversation starters, not clinical advice
-        • For personal guidance, consult your therapist""")
+        placeholder = st.empty()
+        
+        # Initial message to show we're working
+        placeholder.markdown("Let me think carefully about this...")
+        
+        # Get response (will retry forever if needed)
+        response = generate_response(prompt)
+        
+        # Show timing and response
+        response_time = int(time.time() - start_time)
+        placeholder.markdown(f"""
+        {response}
+        
+        *Generated in {response_time}s • {datetime.datetime.now().strftime('%H:%M')}*
+        """)
 
-# ===== DEBUG =====
-with st.sidebar:
-    st.write(f"Last update: {datetime.now().strftime('%H:%M:%S')}")
-    if st.button("🔄 Test Generator"):
-        test = generate_response("Test")
-        st.code(f"Response: {test[:100]}...")
+    st.caption("Always consult a human therapist for personal advice")
 
 
 '''
