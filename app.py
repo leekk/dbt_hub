@@ -1,29 +1,37 @@
 import streamlit as st
 from huggingface_hub import InferenceClient
 
+# Title
 st.title("🦙 TinyLlama Cloud Chatbot")
 
+# Load inference client (model runs on Hugging Face's servers, not locally)
 client = InferenceClient("TinyLlama/TinyLlama-1.1B-Chat-v1.0")
 
+# Store chat history
 if "history" not in st.session_state:
     st.session_state.history = []
 
+# User input
 user_input = st.text_input("You:")
 
 if user_input:
-    # Construct prompt with history
+    # Construct the prompt from history
     prompt = "<|system|>\nYou are a helpful chatbot.\n"
     for u, a in st.session_state.history:
         prompt += f"<|user|>\n{u}\n<|assistant|>\n{a}\n"
     prompt += f"<|user|>\n{user_input}\n<|assistant|>\n"
 
+    # Generate a reply using Hugging Face Inference API
     with st.spinner("Thinking..."):
-        response = client.text_generation(prompt, max_new_tokens=100)
+        response = client.text_generation(prompt, max_new_tokens=150, temperature=0.7, repetition_penalty=1.1)
 
-    # Extract assistant response
+    # Extract the generated assistant text
     reply = response.split("<|assistant|>")[-1].strip()
+
+    # Add to history
     st.session_state.history.append((user_input, reply))
 
+# Display full chat history
 for u, a in st.session_state.history:
     st.markdown(f"**You:** {u}")
     st.markdown(f"**Bot:** {a}")
