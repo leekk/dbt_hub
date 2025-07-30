@@ -14,81 +14,92 @@ st.set_page_config(
     layout="centered"
 )
 
-# ===== SECRETS & CLIENT =====
-def init_client():
-    try:
-        # Initialize with automatic queue handling
-        return InferenceClient(
-            token=st.secrets["HF_TOKEN"],
-            model=MODEL_NAME,
-            timeout=45  # Extended timeout
-        )
-    except Exception as e:
-        st.error(f"Client initialization failed: {str(e)}")
-        st.stop()
+# ===== CLIENT INIT =====
+@st.cache_resource
+def get_client():
+    return InferenceClient(
+        token=st.secrets["HF_TOKEN"],
+        model=MODEL_NAME,
+        timeout=60
+    )
 
-client = init_client()
+client = get_client()
 
-# ===== THERAPY ENGINE =====
-def generate_dbt_response(user_input):
-    """Generate response with advanced error recovery"""
-    prompt = f"""As a DBT therapist, provide:
-1. [Brief empathetic validation]
-2. [Specific DBT skill recommendation]
-3. [Worksheet name] - [Brief description]
+# ===== IMPROVED RESPONSE GENERATOR =====
+def generate_response(user_input):
+    """Generate response with better error handling"""
+    prompt = f"""As a DBT therapist, respond warmly to this concern:
+    "{user_input}"
 
-User: {user_input}"""
+    Format your response:
+    1. [Brief empathy statement showing understanding]
+    2. [Specific DBT skill that would help]
+    3. [Worksheet suggestion] - [When to use it]
     
-    for attempt in range(2):  # Two attempts
+    Keep responses under 3 sentences per section."""
+    
+    try:
+        # First attempt with longer timeout
+        response = client.text_generation(
+            prompt=prompt,
+            max_new_tokens=200,
+            temperature=0.7,
+            do_sample=True
+        )
+        
+        # Verify we got a proper response
+        if len(response.split()) > 5:  # Basic length check
+            return response
+        else:
+            raise ValueError("Response too short")
+            
+    except Exception as e:
+        # If first attempt fails, try once more after delay
+        time.sleep(RATE_LIMIT_DELAY)
         try:
-            time.sleep(RATE_LIMIT_DELAY)
             response = client.text_generation(
                 prompt=prompt,
-                max_new_tokens=250,
-                temperature=0.7,
-                do_sample=True,
-                seed=42  # For consistency
+                max_new_tokens=200
             )
             return response
-            
-        except Exception as e:
-            if attempt == 1:  # Final fallback
-                return """🌱 Quick DBT Exercise:
-1. **Paced Breathing**: 
-   - Inhale 4s → Hold 4s → Exhale 6s
-2. **Grounding**:
-   - Name: 5 things you see → 4 sounds → 3 textures
-3. Worksheet: "Distress Tolerance" - Crisis survival skills
-[System recovering - try again in 1 minute]"""
+        except:
+            # Only show fallback if both attempts fail
+            return None
 
-# ===== UI =====
+# ===== FALLBACK CONTENT =====
+FALLBACK_RESPONSE = """
+1. I hear you're seeking support - that takes courage
+2. Try the TIPP skill: 
+   - Temperature (splash cold water on face)
+   - Intense exercise (5 minutes of jumping jacks)
+3. Worksheet: "Emotion Regulation" - Understanding your triggers
+"""
+
+# ===== MAIN APP =====
 st.title("DBT Therapy Assistant")
 st.caption("AI-assisted support | Not a substitute for professional care")
 
-if prompt := st.chat_input("Share what's on your mind..."):
-    with st.spinner("💭 Thinking carefully..."):
-        response = generate_dbt_response(prompt)
-    
-    with st.chat_message("assistant", avatar="🧠"):
-        st.write(response)
-        st.divider()
-        st.caption("""
-        Remember:  
-        • These are suggestions, not prescriptions  
-        • Practice skills when calm to build mastery  
-        • Reach out to your therapist for personal guidance""")
-
-# ===== DEBUG =====
-with st.sidebar:
-    st.title("System Status")
-    st.write(f"Last check: {datetime.now().strftime('%H:%M:%S')}")
-    st.success("✅ API Connected")
-    st.write(f"Model: {MODEL_NAME}")
-    
-    if st.button("🔄 Test Connection"):
-        with st.spinner("Testing..."):
-            test_response = generate_dbt_response("Test connection")
-            st.info(f"Response: {test_response[:100]}...")
+if prompt := st.chat_input("How can I help today?"):
+    with st.spinner("🧭 Finding the most helpful response..."):
+        # Try to get real response first
+        response = generate_response(prompt)
+        
+        # Only use fallback if absolutely necessary
+        final_response = response if response else FALLBACK_RESPONSE
+        
+        # Display with consistent formatting
+        with st.chat_message("assistant", avatar="🧠"):
+            st.markdown(final_response)
+            st.divider()
+            
+            if not response:  # Only show wait message if using fallback
+                st.caption("🔍 The system is processing other requests. For a more detailed response, try again in 1-2 minutes.")
+            
+            st.caption("""
+            Remember:
+            • These are general suggestions
+            • Skills work best with regular practice
+            • Consult your therapist for personal guidance""")
 
 
 '''
