@@ -1,48 +1,32 @@
 import streamlit as st
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from huggingface_hub import InferenceClient
 
-# Load model & tokenizer
-@st.cache_resource  # so it doesn't reload every time
-def load_model():
-    model_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForCausalLM.from_pretrained(model_id)
-    return pipeline("text-generation", model=model, tokenizer=tokenizer)
+st.title("🦙 TinyLlama Cloud Chatbot")
 
-chatbot = load_model()
+client = InferenceClient("TinyLlama/TinyLlama-1.1B-Chat-v1.0")
 
-# Streamlit UI
-st.title("🦙 TinyLlama Chatbot")
-st.write("Ask anything!")
-
-# Chat state
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# User input
-user_input = st.text_input("You:", key="input")
+user_input = st.text_input("You:")
 
 if user_input:
-    # Build prompt
-    prompt = "<|system|>\nYou are a helpful assistant.\n"
-    for i, (u, a) in enumerate(st.session_state.history):
+    # Construct prompt with history
+    prompt = "<|system|>\nYou are a helpful chatbot.\n"
+    for u, a in st.session_state.history:
         prompt += f"<|user|>\n{u}\n<|assistant|>\n{a}\n"
     prompt += f"<|user|>\n{user_input}\n<|assistant|>\n"
 
-    # Generate response
     with st.spinner("Thinking..."):
-        response = chatbot(prompt, max_new_tokens=100, do_sample=True, temperature=0.7)[0]["generated_text"]
+        response = client.text_generation(prompt, max_new_tokens=100)
 
-    # Parse output
-    response_text = response.split("<|assistant|>")[-1].strip()
+    # Extract assistant response
+    reply = response.split("<|assistant|>")[-1].strip()
+    st.session_state.history.append((user_input, reply))
 
-    # Save to history
-    st.session_state.history.append((user_input, response_text))
-
-# Display chat history
-for user_msg, bot_msg in st.session_state.history:
-    st.markdown(f"**You:** {user_msg}")
-    st.markdown(f"**Bot:** {bot_msg}")
+for u, a in st.session_state.history:
+    st.markdown(f"**You:** {u}")
+    st.markdown(f"**Bot:** {a}")
 
 '''
 # DBT DATABASE
