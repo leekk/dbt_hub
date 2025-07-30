@@ -3,48 +3,57 @@ import torch
 from transformers import pipeline
 
 st.set_page_config(page_title="Maya: DBT Coach", layout="wide")
-st.title("Maya: Your DBT Coach 🤖")
+st.title("🧠 Maya: Your DBT Coach")
 
-# Load the Zephyr model (slow on first run if not cached)
-@st.cache_resource
-def load_model():
-    return pipeline(
-        "text-generation",
-        model="HuggingFaceH4/zephyr-7b-beta",
-        torch_dtype=torch.float16,
-        device_map="auto"
-    )
+# Load model (safely for CPU environments like Streamlit Cloud)
+pipe = pipeline(
+    "text-generation",
+    model="HuggingFaceH4/zephyr-7b-beta",
+    device_map="auto"
+)
 
-pipe = load_model()
-
-# System prompt to shape personality + behavior
+# Define system prompt for DBT-style responses
 system_message = {
     "role": "system",
-    "content": "You are Maya, a compassionate DBT coach who helps users regulate their emotions and validate themselves. You ask thoughtful questions when needed, and never rush. Use simple, warm language."
+    "content": (
+        "You are Maya, a compassionate DBT coach who helps users regulate their emotions "
+        "and validate themselves. You offer warm, reflective, validating responses. "
+        "You often ask questions to help users understand themselves. "
+        "You never judge or give orders. You are gentle and curious."
+    )
 }
 
-# Chat memory (optional, simple list)
+# Initialize chat history
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# User input
+# Chat input
 user_input = st.chat_input("How are you feeling today?")
 
 if user_input:
-    # Add to history
     st.session_state.chat_history.append({"role": "user", "content": user_input})
 
-    # Compose prompt
+    # Build message list
     messages = [system_message] + st.session_state.chat_history
+
+    # Generate prompt with chat template
     prompt = pipe.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
     # Generate response
-    outputs = pipe(prompt, max_new_tokens=300, temperature=0.7, top_p=0.95)
-    response = outputs[0]["generated_text"].split("<|assistant|>")[-1].strip()
+    with st.spinner("Maya is thinking..."):
+        output = pipe(
+            prompt,
+            max_new_tokens=300,
+            temperature=0.7,
+            top_p=0.95,
+            do_sample=True
+        )
+        response = output[0]["generated_text"].split("<|assistant|>")[-1].strip()
 
+    # Save response
     st.session_state.chat_history.append({"role": "assistant", "content": response})
 
-# Display messages
+# Display chat messages
 for msg in st.session_state.chat_history:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
