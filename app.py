@@ -1,4 +1,5 @@
 import streamlit as st
+import torch
 from transformers import pipeline
 
 st.set_page_config(page_title="Maya: DBT Coach", layout="wide")
@@ -10,7 +11,7 @@ def load_model():
     return pipeline(
         "text-generation",
         model="HuggingFaceH4/zephyr-7b-beta",
-        torch_dtype=torch.bfloat16,
+        torch_dtype=torch.float16,
         device_map="auto"
     )
 
