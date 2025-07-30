@@ -1,6 +1,10 @@
 import streamlit as st
+from difflib import get_close_matches
+import requests
+import random
+from typing import Optional
 
-# DBT DATABASE
+# DATABASE
 DBT_SKILLS = {
     "distress": {
         "keywords": ["overwhelmed", "panic", "crisis", "tipp", "stress"],
@@ -23,62 +27,67 @@ DBT_SKILLS = {
     }
 }
 
-# CONVERSATIONAL RESPONSES
-def get_dbt_response(user_input):
+DBT_FALLBACK_RESPONSES = [
+    "Let's practice the 'Observe' skill - what are you noticing right now?",
+    "This sounds like a good moment for some paced breathing. Want to try it with me?",
+    "I'm here with you. Would describing your feelings help right now?",
+    "Remember the 'STOP' skill: Stop, Take a step back, Observe, Proceed mindfully"
+]
+
+def get_ai_fallback_response(user_input: str) -> str:
+    """Get a DBT-focused response from HuggingFace API"""
+    try:
+        API_URL = "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM3-3B"
+        headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
+        
+        prompt = f"""As a DBT therapist, respond to this client statement:
+        Client: "{user_input}"
+        
+        Respond with:
+        1. Brief validation (1 sentence)
+        2. One relevant DBT skill suggestion
+        3. Open-ended question
+        Keep it under 3 sentences total."""
+        
+        response = requests.post(
+            API_URL,
+            headers=headers,
+            json={"inputs": prompt},
+            timeout=5
+        )
+        
+        if response.status_code == 200:
+            return response.json().get('generated_text', 
+                  "I hear you. Let's try some mindfulness exercises together. 🌿")
+        
+        return random.choice(DBT_FALLBACK_RESPONSES)
+        
+    except Exception as e:
+        st.error(f"API Error: {str(e)}")
+        return random.choice(DBT_FALLBACK_RESPONSES)
+
+def get_dbt_response(user_input: str) -> str:
+    """Get appropriate DBT response based on user input"""
     user_input = user_input.lower()
     
+    # Greetings
     if any(greet in user_input for greet in ["hi","hello","hey"]):
-        return "Hello!"
+        return "Hello! I'm here to help with DBT skills. How can I support you today?"
     
+    # Exact keyword matching
     for skill, data in DBT_SKILLS.items():
         if any(keyword in user_input for keyword in data["keywords"]):
             return data["response"]
     
-    # 3. Fuzzy matching
+    # Fuzzy matching
     all_keywords = [kw for skill in DBT_SKILLS.values() for kw in skill["keywords"]]
-    matches = get_close_matches(user_input, all_keywords, n=1, cutoff=0.6)
-    if matches:
+    if matches := get_close_matches(user_input, all_keywords, n=1, cutoff=0.6):
         for skill, data in DBT_SKILLS.items():
             if matches[0] in data["keywords"]:
                 return data["response"]
     
-    # 4. AI Fallback (with DBT context)
-    try:
-        #API_URL = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"
-        API_URL = "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM3-3B"
-        headers = {"Authorization": f"Bearer {st.secrets['HF_API_TOKEN']}"} 
-
-        st.write("HF token begins with:", st.secrets['HF_API_TOKEN'][:10] + "********")
-
-
-        prompt = f"""You're a DBT therapist. The user said "{user_input}". 
-        You reply warmly in 1-2 sentences. If DBT related, name the skill."""
-
-       
-        test_url = "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM3-3B"
-
-        test_response = requests.get(test_url, headers=headers)
-        st.write("HF test response:", test_response.status_code, test_response.text)
-
-        
-        #response = requests.post(API_URL, json={"inputs": prompt}, timeout=3).json()
-        #return response['generated_text'].split(".")[0] + " 🌱"
-    #except:
-        #return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance!"
-
-        response = requests.post(API_URL, json={"inputs": prompt}, timeout=5)
-        response_json = response.json()
-
-        st.write("RAW RESPONSE:", response_json)
-
-        if 'generated_text' in response_json:
-            return response_json['generated_text'].split(".")[0] + " 🌱"
-        else:
-            return "I'm here for you! Maybe we can talk about radical acceptance or emotion regulation? 🌿"
-
-    except Exception as e:
-        st.write("AI Fallback error:", e)
-        return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance!"
+    # AI fallback
+    return get_ai_fallback_response(user_input)
 
 # BELOW IS THE UI
 st.set_page_config(page_title="Therapy Hub", page_icon="🐀")
