@@ -1,30 +1,5 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
-
-checkpoint = "HuggingFaceTB/SmolLM2-360M-Instruct"
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
-tokenizer = AutoTokenizer.from_pretrained(checkpoint)
-model = AutoModelForCausalLM.from_pretrained(checkpoint).to(device)
-
-# If chat template doesn't work, fallback to this:
-# input_text = "### User:\nWhat is the capital of France?\n### Assistant:\n"
-messages = [{"role": "user", "content": "What is the capital of France?"}]
-input_text = tokenizer.apply_chat_template(messages, tokenize=False)
-
-inputs = tokenizer.encode(input_text, return_tensors="pt").to(device)
-
-outputs = model.generate(
-    inputs,
-    max_new_tokens=100,
-    temperature=0.7,
-    top_p=0.95,
-    do_sample=True,
-    pad_token_id=tokenizer.eos_token_id
-)
-
-print(tokenizer.decode(outputs[0], skip_special_tokens=True))
+import streamlit as st
+st.title("it works")
 
 '''
 # DBT DATABASE
