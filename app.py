@@ -31,72 +31,55 @@ DBT_SKILLS = {
 def generate_ai_response(user_input: str, conversation_history: list) -> str:
     """Generate AI response using HuggingFace API"""
     try:
-        API_URL = "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM3-3B"
+        # Switch to a more reliable chat model
+        API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
         headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
         
-        # Build messages in the required format
-        messages = [
-            {"role": "system", "content": "/no_think"},  # Disable extended thinking
-            {"role": "system", "content": "You are a compassionate DBT therapist."}
-        ]
+        # Build conversation history in instruction format
+        conversation = "\n".join(
+            f"{msg['role'].capitalize()}: {msg['content']}" 
+            for msg in conversation_history[-4:]  # Keep last 4 messages for context
+        )
         
-        # Add conversation history
-        for msg in conversation_history:
-            if msg["role"] == "user":
-                messages.append({"role": "user", "content": msg["content"]})
-            elif msg["role"] == "assistant":
-                messages.append({"role": "assistant", "content": msg["content"]})
+        prompt = f"""<s>[INST] You are a compassionate DBT therapist. Continue this conversation naturally:
         
-        # Add current user input
-        messages.append({"role": "user", "content": user_input})
+{conversation}
+User: {user_input}
+Therapist: [/INST]"""
         
-        # Prepare the payload
-        payload = {
-            "inputs": "",  # We'll use messages instead of raw input
-            "parameters": {
-                "messages": messages,
-                "max_new_tokens": 100,
-                "temperature": 0.6,
-                "top_p": 0.95,
-                "return_full_text": False
-            }
-        }
+        # DEBUG
+        st.sidebar.write("**Prompt:**", prompt)
         
-        # DEBUG: Show the payload being sent
-        st.sidebar.subheader("Debug Info")
-        st.sidebar.write("**Payload sent to AI:**")
-        st.sidebar.json(payload)
-        
-        # Make API request
         response = requests.post(
             API_URL,
             headers=headers,
-            json=payload,
-            timeout=15
+            json={
+                "inputs": prompt,
+                "parameters": {
+                    "max_new_tokens": 150,
+                    "temperature": 0.7,
+                    "return_full_text": False
+                }
+            },
+            timeout=10
         )
-        
-        # DEBUG: Show raw API response
-        st.sidebar.write("**API Response Status:**", response.status_code)
-        st.sidebar.write("**Response Text:**", response.text[:500] + "...")
         
         if response.status_code == 200:
             result = response.json()
-            st.sidebar.write("**API JSON:**", result)
-            
             if isinstance(result, list) and len(result) > 0:
-                if isinstance(result[0], dict) and 'generated_text' in result[0]:
-                    return result[0]['generated_text'].strip()
-                
-                # Try alternative response format
-                if 'choices' in result and len(result['choices']) > 0:
-                    return result['choices'][0]['message']['content'].strip()
+                generated = result[0].get('generated_text', '').strip()
+                # Clean up the response
+                if "Therapist:" in generated:
+                    generated = generated.split("Therapist:")[-1].strip()
+                if "[/INST]" in generated:
+                    generated = generated.split("[/INST]")[-1].strip()
+                return generated if generated else random.choice(GENERAL_RESPONSES)
         
-        # If we get here, show full error
-        st.sidebar.error(f"Full API Error: {response.text}")
+        st.sidebar.error(f"API Error: {response.status_code} - {response.text[:200]}")
         return random.choice(GENERAL_RESPONSES)
         
     except Exception as e:
-        st.sidebar.error(f"API Exception: {str(e)}")
+        st.sidebar.error(f"Error: {str(e)}")
         return random.choice(GENERAL_RESPONSES)
 
 GENERAL_RESPONSES = [
