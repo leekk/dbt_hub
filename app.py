@@ -90,59 +90,59 @@ def generate_ai_response(user_input: str, conversation_history: list) -> str:
         )
         prompt = f"""You are a compassionate DBT therapist. Respond to the client in 1-2 sentences.
         
-#        Conversation history:
-#        {history_text}
+        Conversation history:
+        {history_text}
         
-#        Client: {user_input}
-#        Therapist:"""
+        Client: {user_input}
+        Therapist:"""
         
         # DEBUG: Show the prompt
-#        st.sidebar.code(f"Prompt:\n{prompt}")
-#        st.sidebar.write("Sending text prompt to:", API_URL)
+        st.sidebar.code(f"Prompt:\n{prompt}")
+        st.sidebar.write("Sending text prompt to:", API_URL)
 
-#        response = requests.post(
-#            API_URL,
-#            headers=headers,
-#            json={
-#                "inputs": prompt,  # Send as simple text input
-#                "parameters": {
-#                    "max_new_tokens": 150,
-#                    "temperature": 0.7,
-#                    "do_sample": True
- #               }
- #           },
-#            timeout=15
-#        )
+        response = requests.post(
+            API_URL,
+            headers=headers,
+            json={
+                "inputs": prompt,  # Send as simple text input
+                "parameters": {
+                    "max_new_tokens": 150,
+                    "temperature": 0.7,
+                    "do_sample": True
+                }
+            },
+            timeout=15
+        )
 
         # DEBUG: Show full response info
-#        st.sidebar.write("Status code:", response.status_code)
-#        st.sidebar.write("Response text:", response.text[:500] + "...")
+        st.sidebar.write("Status code:", response.status_code)
+        st.sidebar.write("Response text:", response.text[:500] + "...")
         
-#        if response.status_code == 200:
-#            result = response.json()
-#            if isinstance(result, list) and len(result) > 0:
-#                # Extract generated text
-#                generated = result[0].get('generated_text', '')
+        if response.status_code == 200:
+            result = response.json()
+            if isinstance(result, list) and len(result) > 0:
+                # Extract generated text
+                generated = result[0].get('generated_text', '')
                 
                 # Remove the original prompt from the response
-#                if prompt in generated:
-#                    generated = generated.replace(prompt, "")
+                if prompt in generated:
+                    generated = generated.replace(prompt, "")
                     
-#                return generated.strip() or "I'm here for you. What would you like to talk about?"
+                return generated.strip() or "I'm here for you. What would you like to talk about?"
         
-#        return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance."
+        return "Let's focus on DBT skills. Try asking about mindfulness or distress tolerance."
 
-#    except Exception as e:
-#        st.sidebar.error(f"Error: {str(e)}")
-#        return random.choice(GENERAL_RESPONSES)
+    except Exception as e:
+        st.sidebar.error(f"Error: {str(e)}")
+        return random.choice(GENERAL_RESPONSES)
 
-#GENERAL_RESPONSES = [
-#    "I hear you. Tell me more about that.",
-#    "That's interesting. What else comes to mind?",
-#    "Thanks for sharing. How does that relate to how you're feeling?",
-#    "I'm following along. Would you like to explore this further?",
-#    "Let's stay with that feeling for a moment. What do you notice?",
-#]
+GENERAL_RESPONSES = [
+    "I hear you. Tell me more about that.",
+    "That's interesting. What else comes to mind?",
+    "Thanks for sharing. How does that relate to how you're feeling?",
+    "I'm following along. Would you like to explore this further?",
+    "Let's stay with that feeling for a moment. What do you notice?",
+]
 
 def get_dbt_response(user_input: str, conversation_history: list) -> str:
     """Get response with priority: DBT skills > AI generation"""
