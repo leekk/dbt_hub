@@ -124,6 +124,13 @@ with tab3:
         3. Listen for 3 sounds  
         [Learn more](https://dialecticalbehaviortherapy.com)
         """)
+    with st.container(border=True):  # 👈 Creates a bordered container
+        st.markdown("""
+        **💡 ANOTHER BOX**  
+        *Grounding Technique*: When feeling overwhelmed, try:  
+        blabla   
+        [Learn more](https://dialecticalbehaviortherapy.com)
+        """)
 
 # -------------------- CONVO --------------------
 with st.sidebar:
