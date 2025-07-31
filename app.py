@@ -47,21 +47,23 @@ def generate_response(prompt: str, history: list) -> str:
     """Generate AI response with guided personality"""
     messages = [
         {
-            "role": "system",  # <-- THIS IS KEY
-            "content": """You are a compassionate Dialectical Behavior Therapy (DBT) coach. Your responses should:
-- Be 1-2 sentences maximum
-- Use simple, empathetic language
-- Focus on DBT skills when relevant
-- Never give medical advice
-- Ask open-ended questions to encourage reflection
-Example: "I hear you're feeling anxious. Would practicing paced breathing together help?""""
+            "role": "system",
+            "content": (
+                "You are a compassionate Dialectical Behavior Therapy (DBT) coach. Your responses should:\n"
+                "- Be 1-2 sentences maximum\n"
+                "- Use simple, empathetic language\n"
+                "- Focus on DBT skills when relevant\n"
+                "- Never give medical advice\n"
+                "- Ask open-ended questions to encourage reflection\n"
+                'Example: "I hear you\'re feeling anxious. Would practicing paced breathing together help?"'
+            )
         },
         *[{"role": m["role"], "content": m["content"]} for m in history]
     ]
     
     completion = client.chat.completions.create(
         model="HuggingFaceTB/SmolLM3-3B",
-        messages=messages  # <-- Now includes system prompt
+        messages=messages
     )
     return completion.choices[0].message.content
 
