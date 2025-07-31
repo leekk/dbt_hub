@@ -22,16 +22,16 @@ def get_client():
 client = get_client()
 
 # -------------------- SKILLS DATABASE --------------------
-DBT_SKILLS = {
-    "mindfulness": {
-        "keywords": ["mindful", "present moment", "observe"],
-        "response": "Let's practice mindfulness. Try focusing on your breath for 60 seconds..."
-    },
-    "distress_tolerance": {
-        "keywords": ["crisis", "distress", "urge"],
-        "response": "In moments of distress, try the TIPP skill..."
-    }
-}
+#DBT_SKILLS = {
+#    "mindfulness": {
+#        "keywords": ["mindful", "present moment", "observe"],
+#        "response": "Let's practice mindfulness. Try focusing on your breath for 60 seconds..."
+#    },
+#    "distress_tolerance": {
+#        "keywords": ["crisis", "distress", "urge"],
+#        "response": "In moments of distress, try the TIPP skill..."
+#    }
+#}
 # -----------------------------------------------------------
 # general fallback responses
 GENERAL_RESPONSES = [
@@ -49,8 +49,12 @@ def generate_response(prompt: str, history: list) -> str:
         {
             "role": "system",
             "content": (
-                "You are a compassionate Dialectical Behavior Therapy (DBT) coach. Your responses should:\n"
-                "- Be 1-2 sentences maximum\n"
+                "You are a compassionate Dialectical Behavior Therapy (DBT) coach."
+                "You are a tool to teach DBT skills. When the user brings up a struggle,"
+                "you should recognize the pattern in the DBT and provide brief information"
+                "on the corresponding skill the user should refer to"
+                "Your responses should:\n"
+                "- sentence lengths can vary depending on the engagement of the user\n"
                 "- Use simple, empathetic language\n"
                 "- Focus on DBT skills when relevant\n"
                 "- Never give medical advice\n"
