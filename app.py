@@ -141,6 +141,17 @@ with st.sidebar:
         st.write("1. 5-4-3-2-1 Grounding Technique...")
     with st.expander("Distress Tolerance"):
         st.write("TIPP Skill: Temperature, Intense exercise...")
+        
+    col_main, col_right = st.columns([4, 1])  # main content left, "sidebar" right
+
+    with col_main:
+        st.markdown("### Main Content Area")
+        st.write("This is your regular app content.")
+
+    with col_right:
+        st.markdown("### 🛠️ Tools")
+        st.button("Action")
+        st.markdown("Tip: Breathe in for 4 seconds...")
 
 
 # -------------------- UI EXTRA --------------------
