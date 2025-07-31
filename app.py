@@ -126,10 +126,13 @@ with tab3:
         """)
     with st.container(border=True):  # 👈 Creates a bordered container
         st.markdown("""
-        **💡 ANOTHER BOX**  
-        *Grounding Technique*: When feeling overwhelmed, try:  
-        blabla   
-        [Learn more](https://dialecticalbehaviortherapy.com)
+        **DBT zine!**  
+        [Check it out!](https://www.reddit.com/r/zines/comments/1m1r9ct/wip_dbt_zine/)
+        """)
+    with st.container(border=True):  # 👈 Creates a bordered container
+        st.markdown("""
+        **DBT zine!**  
+        [Check it out!](https://www.reddit.com/r/zines/comments/1m1r9ct/wip_dbt_zine/)
         """)
 
 # -------------------- CONVO --------------------
