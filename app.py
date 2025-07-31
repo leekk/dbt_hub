@@ -134,13 +134,35 @@ st.set_page_config(page_title="DBT Hub", page_icon="🐀", layout="wide")
 st.markdown("""<style>/* Your existing CSS */</style>""", unsafe_allow_html=True)
 
 
+st.markdown(
+    """
+    <style>
+        .stTabs [data-baseweb="tab-list"] {
+            position: fixed;
+            top: 0;
+            background: white;
+            z-index: 999;
+            width: 100%;
+            padding: 1rem 1rem 0 1rem;
+        }
+        
+        /* Add padding to main content so it starts below fixed tabs */
+        .main .block-container {
+            padding-top: 6rem;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # Tabs
-tab1, tab2 = st.tabs(["DBT", "CBT"])
+tab1, tab2, tab3 = st.tabs(["Ask", "News", "More Resources"])
 with tab1:
     st.write("we can have the dbt chatbot here")
 with tab2:
     st.write("Content in tab 2")
+with tab3: 
+    st.write("I might put this at the bottom of the sidebar?")
 
 with st.sidebar:
     st.header("Sidebar Title")
