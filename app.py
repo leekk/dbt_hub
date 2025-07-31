@@ -148,6 +148,10 @@ with st.sidebar:
     st.header("Sidebar Title")
     st.write("This goes in the sidebar")
 
+with st.sidebar:
+    st.header("hopefully other sidebar")
+    st.write("This goes in the sidebar")
+
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Hi there! I'm your DBT companion. How can I support you today?"}
