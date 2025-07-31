@@ -5,7 +5,7 @@ import random
 import time
 import json
 
-# DATABASE
+# -------------------- DATABASE --------------------
 DBT_SKILLS = {
     "distress": {
         "keywords": ["overwhelmed", "panic", "crisis", "tipp", "stress"],
@@ -37,7 +37,7 @@ def show_debug_info():
     else:
         st.sidebar.error("HF_TOKEN not found in secrets!")
 
-# CONVERSATIONAL RESPONSES
+# -------------------- CONVO --------------------
 def generate_ai_response(user_input: str, conversation_history: list) -> str:
     """Generate responses using Mistral-7B-Instruct-v0.3"""
     try:
@@ -129,9 +129,16 @@ def get_dbt_response(user_input: str, conversation_history: list) -> str:
     # 4. Generate AI response
     return generate_ai_response(user_input, conversation_history)
 
-# UI SETUP (unchanged from your original)
-st.set_page_config(page_title="Therapy Hub", page_icon="🌿", layout="wide")
+# -------------------- UI --------------------
+st.set_page_config(page_title="DBT Hub", page_icon="🐀", layout="wide")
 st.markdown("""<style>/* Your existing CSS */</style>""", unsafe_allow_html=True)
+
+st.title("This is a title")  # Big title
+st.header("This is a header")  # Medium header
+st.subheader("This is a subheader")  # Smaller header
+st.text("This is plain text")  # Fixed-width text
+st.markdown("**This** is *markdown*")  # Supports Markdown
+st.write("This works with almost anything")
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
