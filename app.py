@@ -133,23 +133,20 @@ def get_dbt_response(user_input: str, conversation_history: list) -> str:
 st.set_page_config(page_title="DBT Hub", page_icon="🐀", layout="wide")
 st.markdown("""<style>/* Your existing CSS */</style>""", unsafe_allow_html=True)
 
-# Columns
-col1, col2 = st.columns(2)
-with col1:
-    st.write("This is column 1")
-with col2:
-    st.write("This is column 2")
-
 # Expander
-with st.expander("Click to expand"):
+with st.expander("New here?"):
     st.write("Hidden content here!")
 
 # Tabs
-tab1, tab2 = st.tabs(["First", "Second"])
+tab1, tab2 = st.tabs(["DBT", "CBT"])
 with tab1:
-    st.write("Content in tab 1")
+    st.write("we can have the dbt chatbot here")
 with tab2:
     st.write("Content in tab 2")
+
+with st.sidebar:
+    st.header("Sidebar Title")
+    st.write("This goes in the sidebar")
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
