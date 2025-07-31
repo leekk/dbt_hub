@@ -22,6 +22,7 @@ def get_client():
 client = get_client()
 
 # -------------------- SKILLS DATABASE --------------------
+# I need to take out this part w/out damaging anything
 DBT_SKILLS = {
     "mindfulness": {
         "keywords": ["mindful", "present moment", "observe"],
@@ -59,6 +60,7 @@ def generate_response(prompt: str, history: list) -> str:
                 "- if the user poses the question in a forgein language, you reply in that language if you know it\n"
                 "- Focus on DBT skills when relevant\n"
                 "- Never give medical advice\n"
+                "- your name is Prongles but you don't need to give that information unless asked directly.\n"
                 "- Ask open-ended questions to encourage reflection\n"
                 'Example: "I hear you\'re feeling anxious. Would practicing paced breathing together help?"'
             )
@@ -113,6 +115,15 @@ with tab2:
 
 with tab3:
     st.write("About this app and contact information")
+    with st.container(border=True):  # 👈 Creates a bordered container
+    st.markdown("""
+    **💡 DBT Skill Tip**  
+    *Grounding Technique*: When feeling overwhelmed, try:  
+    1. Name 5 things you see  
+    2. Touch 4 textures  
+    3. Listen for 3 sounds  
+    [Learn more](https://dialecticalbehaviortherapy.com)
+    """)
 
 # -------------------- CONVO --------------------
 with st.sidebar:
