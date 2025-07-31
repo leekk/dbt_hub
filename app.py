@@ -131,8 +131,8 @@ with tab3:
         """)
     with st.container(border=True):  # 👈 Creates a bordered container
         st.markdown("""
-        **DBT zine!**  
-        [Check it out!](https://www.reddit.com/r/zines/comments/1m1r9ct/wip_dbt_zine/)
+        **Will Wood - Marsha, Thankk You for the Dialectics, but I Need You to Leave (Official Lyric Video)**  
+        [Listen to it here!](https://www.youtube.com/watch?v=nyIKBT7-a9M&list=RDnyIKBT7-a9M&start_radio=1)
         """)
 
 # -------------------- CONVO --------------------
