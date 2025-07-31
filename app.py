@@ -11,6 +11,11 @@ from huggingface_hub import InferenceClient
 # -------------------- TRYNG AI HERE --------------------
 os.environ["HF_TOKEN"] = st.secrets['HF_TOKEN']
 
+#client = InferenceClient(
+#    provider="hf-inference",
+#    api_key=os.environ["HF_TOKEN"],
+#)
+
 @st.cache_resource
 def get_client():
     return InferenceClient(
@@ -20,6 +25,17 @@ def get_client():
 
 
 client = get_client()
+
+#completion = client.chat.completions.create(
+#    model="HuggingFaceTB/SmolLM3-3B",
+#    messages=[
+#        {
+#            "role": "user",
+#            "content": "I'm sad"
+#        }
+#    ],
+#)
+#st.write(completion.choices[0].message)
 
 # Gestion de l'historique des messages
 if "messages" not in st.session_state:
@@ -212,4 +228,3 @@ if prompt := st.chat_input("Share your thoughts..."):
     
     st.session_state.messages.append({"role": "assistant", "content": response})
     st.chat_message("assistant").write(response)
-
