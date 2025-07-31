@@ -44,16 +44,26 @@ GENERAL_RESPONSES = [
 
 # -----------------------------------------------------------
 def generate_response(prompt: str, history: list) -> str:
-    """Generate AI response using the conversation history"""
-    try:
-        completion = client.chat.completions.create(
-            model="HuggingFaceTB/SmolLM3-3B",
-            messages=[{"role": m["role"], "content": m["content"]} for m in history]
-        )
-        return completion.choices[0].message.content
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
-        return random.choice(GENERAL_RESPONSES)
+    """Generate AI response with guided personality"""
+    messages = [
+        {
+            "role": "system",  # <-- THIS IS KEY
+            "content": """You are a compassionate Dialectical Behavior Therapy (DBT) coach. Your responses should:
+- Be 1-2 sentences maximum
+- Use simple, empathetic language
+- Focus on DBT skills when relevant
+- Never give medical advice
+- Ask open-ended questions to encourage reflection
+Example: "I hear you're feeling anxious. Would practicing paced breathing together help?""""
+        },
+        *[{"role": m["role"], "content": m["content"]} for m in history]
+    ]
+    
+    completion = client.chat.completions.create(
+        model="HuggingFaceTB/SmolLM3-3B",
+        messages=messages  # <-- Now includes system prompt
+    )
+    return completion.choices[0].message.content
 
 def get_dbt_response(user_input: str, history: list) -> str:
     """Get response with priority: DBT skills > AI generation"""
