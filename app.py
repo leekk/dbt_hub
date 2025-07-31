@@ -112,6 +112,7 @@ with tab1:
 
 with tab2:
     st.write("DBT resources and exercises will appear here")
+    st.write("Cute Ghosts on Drinking Straws by Kaboompics.com licensed under CC BY 4.0.")
 
 with tab3:
     st.write("About this app and contact information")
@@ -133,7 +134,7 @@ with tab3:
         [Listen to it here!](https://www.youtube.com/watch?v=nyIKBT7-a9M&list=RDnyIKBT7-a9M&start_radio=1)
         """)
 
-# -------------------- CONVO --------------------
+# -------------------- SIDEBAR --------------------
 with st.sidebar:
     st.header("DBT Skills Quick Access")
     with st.expander("Mindfulness Exercises"):
@@ -141,4 +142,18 @@ with st.sidebar:
     with st.expander("Distress Tolerance"):
         st.write("TIPP Skill: Temperature, Intense exercise...")
 
-st.sidebar.button("button test")
+
+# -------------------- UI EXTRA --------------------
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-image: url("pexels-karolina-grabowska-5478044.jpg");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
