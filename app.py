@@ -120,7 +120,7 @@ with tab3:
         with col1:
             st.image("https://via.placeholder.com/60", width=60)  # small image
         with col2:
-        st.markdown("**DBT Skill of the Day**  \nLearn how to use Opposite Action to fight emotional inertia.")
+            st.markdown("**DBT Skill of the Day**  \nLearn how to use Opposite Action to fight emotional inertia.")
         
     with st.container(border=True):  # 👈 Creates a bordered container
         st.markdown("""
