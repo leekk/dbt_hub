@@ -22,16 +22,16 @@ def get_client():
 client = get_client()
 
 # -------------------- SKILLS DATABASE --------------------
-#DBT_SKILLS = {
-#    "mindfulness": {
-#        "keywords": ["mindful", "present moment", "observe"],
-#        "response": "Let's practice mindfulness. Try focusing on your breath for 60 seconds..."
-#    },
-#    "distress_tolerance": {
-#        "keywords": ["crisis", "distress", "urge"],
-#        "response": "In moments of distress, try the TIPP skill..."
-#    }
-#}
+DBT_SKILLS = {
+    "mindfulness": {
+        "keywords": ["mindful", "present moment", "observe"],
+        "response": "Let's practice mindfulness. Try focusing on your breath for 60 seconds..."
+    },
+    "distress_tolerance": {
+        "keywords": ["crisis", "distress", "urge"],
+        "response": "In moments of distress, try the TIPP skill..."
+    }
+}
 # -----------------------------------------------------------
 # general fallback responses
 GENERAL_RESPONSES = [
@@ -75,10 +75,10 @@ def get_dbt_response(user_input: str, history: list) -> str:
     """Get response with priority: DBT skills > AI generation"""
     user_input = user_input.lower()
     
-    ## Check for DBT keywords
-    #for skill, data in DBT_SKILLS.items():
-    #    if any(keyword in user_input for keyword in data["keywords"]):
-    #        return data["response"]
+    # Check for DBT keywords
+    for skill, data in DBT_SKILLS.items():
+        if any(keyword in user_input for keyword in data["keywords"]):
+            return data["response"]
     
     # Generate AI response if no DBT match
     return generate_response(user_input, history)
