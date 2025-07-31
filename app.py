@@ -75,10 +75,10 @@ def get_dbt_response(user_input: str, history: list) -> str:
     """Get response with priority: DBT skills > AI generation"""
     user_input = user_input.lower()
     
-    # Check for DBT keywords
-    for skill, data in DBT_SKILLS.items():
-        if any(keyword in user_input for keyword in data["keywords"]):
-            return data["response"]
+    ## Check for DBT keywords
+    #for skill, data in DBT_SKILLS.items():
+    #    if any(keyword in user_input for keyword in data["keywords"]):
+    #        return data["response"]
     
     # Generate AI response if no DBT match
     return generate_response(user_input, history)
