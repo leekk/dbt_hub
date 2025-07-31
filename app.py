@@ -133,12 +133,39 @@ def get_dbt_response(user_input: str, conversation_history: list) -> str:
 st.set_page_config(page_title="DBT Hub", page_icon="🐀", layout="wide")
 st.markdown("""<style>/* Your existing CSS */</style>""", unsafe_allow_html=True)
 
-st.title("This is a title")  # Big title
-st.header("This is a header")  # Medium header
-st.subheader("This is a subheader")  # Smaller header
-st.text("This is plain text")  # Fixed-width text
-st.markdown("**This** is *markdown*")  # Supports Markdown
-st.write("This works with almost anything")
+# Button
+if st.button("Click me"):
+    st.write("Button clicked!")
+
+# Checkbox
+if st.checkbox("I agree"):
+    st.write("Thanks for agreeing!")
+
+# Radio buttons
+choice = st.radio("Choose one", ["Option 1", "Option 2"])
+st.write(f"You chose: {choice}")
+
+# Selectbox
+option = st.selectbox("Pick one", ["Cat", "Dog", "Bird"])
+st.write(f"You selected: {option}")
+
+# Slider
+age = st.slider("Your age", 0, 100, 25)
+st.write(f"I'm {age} years old")
+
+# Text input
+name = st.text_input("Enter your name")
+if name:
+    st.write(f"Hello, {name}!")
+
+# Number input
+number = st.number_input("Pick a number", 0, 100)
+st.write(f"Your number: {number}")
+
+# File uploader
+uploaded_file = st.file_uploader("Upload a file")
+if uploaded_file:
+    st.write("File uploaded!")
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
