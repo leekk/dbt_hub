@@ -148,9 +148,25 @@ with st.sidebar:
     st.header("Sidebar Title")
     st.write("This goes in the sidebar")
 
+st.markdown(
+    """
+    <style>
+        section[data-testid="stSidebar"] {
+            position: fixed;
+            right: 0;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Your app content
 with st.sidebar:
-    st.header("hopefully other sidebar")
-    st.write("This goes in the sidebar")
+    st.header("Right Sidebar")
+    st.button("Click me")
+
+st.title("Main Content")
+st.write("This is the main area with sidebar on the right")
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
