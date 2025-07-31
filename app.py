@@ -140,3 +140,5 @@ with st.sidebar:
         st.write("1. 5-4-3-2-1 Grounding Technique...")
     with st.expander("Distress Tolerance"):
         st.write("TIPP Skill: Temperature, Intense exercise...")
+
+st.sidebar.button("button test")
