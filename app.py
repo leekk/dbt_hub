@@ -116,14 +116,14 @@ with tab2:
 with tab3:
     st.write("About this app and contact information")
     with st.container(border=True):  # 👈 Creates a bordered container
-    st.markdown("""
-    **💡 DBT Skill Tip**  
-    *Grounding Technique*: When feeling overwhelmed, try:  
-    1. Name 5 things you see  
-    2. Touch 4 textures  
-    3. Listen for 3 sounds  
-    [Learn more](https://dialecticalbehaviortherapy.com)
-    """)
+        st.markdown("""
+        **💡 DBT Skill Tip**  
+        *Grounding Technique*: When feeling overwhelmed, try:  
+        1. Name 5 things you see  
+        2. Touch 4 textures  
+        3. Listen for 3 sounds  
+        [Learn more](https://dialecticalbehaviortherapy.com)
+        """)
 
 # -------------------- CONVO --------------------
 with st.sidebar:
