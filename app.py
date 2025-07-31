@@ -134,67 +134,6 @@ st.set_page_config(page_title="DBT Hub", page_icon="🐀", layout="wide")
 st.markdown("""<style>/* Your existing CSS */</style>""", unsafe_allow_html=True)
 
 
-st.markdown(
-    """
-    <style>
-        .fixed-nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: white;
-            padding: 1rem;
-            z-index: 999;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .nav-content {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .main-content {
-            margin-top: 6rem;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# Create session state to track active tab
-if 'active_tab' not in st.session_state:
-    st.session_state.active_tab = 'home'
-
-# Fixed navigation bar
-st.markdown(
-    """
-    <div class="fixed-nav">
-        <div class="nav-content">
-            <button onclick="window.streamlitSessionState.set('active_tab', 'home')">Home</button>
-            <button onclick="window.streamlitSessionState.set('active_tab', 'data')">Data</button>
-            <button onclick="window.streamlitSessionState.set('active_tab', 'settings')">Settings</button>
-        </div>
-    </div>
-    <div class="main-content">
-    """,
-    unsafe_allow_html=True
-)
-
-# Content based on active tab
-if st.session_state.active_tab == 'home':
-    st.header("Home Content")
-    for i in range(50):
-        st.write(f"Home item {i}")
-elif st.session_state.active_tab == 'data':
-    st.header("Data Content")
-    for i in range(50):
-        st.write(f"Data item {i}")
-else:
-    st.header("Settings")
-    st.slider("Adjust setting", 0, 100)
-
-st.markdown("</div>", unsafe_allow_html=True)
-
 # Tabs
 tab1, tab2, tab3 = st.tabs(["Ask", "News", "More Resources"])
 with tab1:
