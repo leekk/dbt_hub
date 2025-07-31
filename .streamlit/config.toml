@@ -1,6 +1,6 @@
 [theme]
 primaryColor = "#4B9CD3"
-backgroundColor = "#FFD580"
-secondaryBackgroundColor = "#C04000" #sidebar
+backgroundColor = "#FFE5B4"
+secondaryBackgroundColor = "#FFC000" #sidebar
 textColor = "#000000"
 font = "sans serif"
