@@ -77,18 +77,18 @@ def show_debug_info():
         st.sidebar.error("HF_TOKEN not found in secrets!")
 
 # -------------------- CONVO --------------------
-#def generate_ai_response(user_input: str, conversation_history: list) -> str:
-#    """Generate responses using Mistral-7B-Instruct-v0.3"""
-#    try:
-#        API_URL = "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3"
-#        headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
+def generate_ai_response(user_input: str, conversation_history: list) -> str:
+    """Generate responses using Mistral-7B-Instruct-v0.3"""
+    try:
+        API_URL = "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3"
+        headers = {"Authorization": f"Bearer {st.secrets['HF_TOKEN']}"}
         
         # Build a simple text prompt (not JSON)
-#        history_text = "\n".join(
-#            f"{msg['role']}: {msg['content']}" 
-#            for msg in conversation_history[-3:]  # Last 3 messages
-#        )
-#        prompt = f"""You are a compassionate DBT therapist. Respond to the client in 1-2 sentences.
+        history_text = "\n".join(
+            f"{msg['role']}: {msg['content']}" 
+            for msg in conversation_history[-3:]  # Last 3 messages
+        )
+        prompt = f"""You are a compassionate DBT therapist. Respond to the client in 1-2 sentences.
         
 #        Conversation history:
 #        {history_text}
