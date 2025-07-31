@@ -56,6 +56,7 @@ def generate_response(prompt: str, history: list) -> str:
                 "Your responses should:\n"
                 "- sentence lengths can vary depending on the engagement of the user\n"
                 "- Use simple, empathetic language\n"
+                "- if the user poses the question in a forgein language, you reply in that language if you know it\n"
                 "- Focus on DBT skills when relevant\n"
                 "- Never give medical advice\n"
                 "- Ask open-ended questions to encourage reflection\n"
