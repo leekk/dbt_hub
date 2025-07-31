@@ -148,7 +148,7 @@ st.markdown(
     """
     <style>
     .stApp {
-        background-image: url("pexels-karolina-grabowska-5478044.jpg");
+        background-image: url("https://www.pexels.com/photo/cute-ghosts-on-drinking-straws-5478044/");
         background-size: cover;
         background-repeat: no-repeat;
         background-attachment: fixed;
