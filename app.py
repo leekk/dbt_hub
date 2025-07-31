@@ -157,3 +157,17 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+st.markdown(
+    """
+    <style>
+    section[data-testid="stSidebar"] {
+        background-image: url("https://www.transparenttextures.com/patterns/white-wall-3.png");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
