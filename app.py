@@ -18,6 +18,7 @@ def get_client():
         api_key=os.environ["HF_TOKEN"]
     )
 
+
 client = get_client()
 
 # Gestion de l'historique des messages
