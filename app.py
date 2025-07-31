@@ -46,12 +46,12 @@ for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
 # Nouveau message utilisateur
-if prompt := st.chat_input("Comment vous sentez-vous ?"):
+if prompt := st.chat_input("How are you feeling?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
     # Appel à l'IA avec indicateur de chargement
-    with st.spinner("L'IA réfléchit..."):
+    with st.spinner("Thinking..."):
         completion = client.chat.completions.create(
             model="HuggingFaceTB/SmolLM3-3B",
             messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages]
