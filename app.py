@@ -110,7 +110,7 @@ with tab1:
         "selectable": "true",
 }
 calendar_events = [
-        0:{
+    {
         "allDay":true
         "title":"Event 1"
         "start":"2025-08-03"
