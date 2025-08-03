@@ -118,6 +118,15 @@ with tab1:
     ],
 }
 calendar_events = [
+        0:{
+        "allDay":true
+        "title":"Event 1"
+        "start":"2023-07-03"
+        "end":"2023-07-05"
+        "backgroundColor":"#FF6C6C"
+        "borderColor":"#FF6C6C"
+        "resourceId":"a"
+    },
     {
         "title": "Event 1",
         "start": "2023-07-31T08:30:00",
