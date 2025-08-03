@@ -222,32 +222,32 @@ with st.sidebar:
 
 
 # -------------------- UI EXTRA(TESTING BGS) --------------------
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background-image: url("https://www.transparenttextures.com/patterns/white-wall-3.png");
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+#st.markdown(
+#    """
+#    <style>
+#    .stApp {
+#        background-image: url("https://www.transparenttextures.com/patterns/white-wall-3.png");
+#        background-size: cover;
+#        background-repeat: no-repeat;
+#        background-attachment: fixed;
+#    }
+#    </style>
+#    """,
+#    unsafe_allow_html=True
+#)
 
-st.markdown(
-    """
-    <style>
-    section[data-testid="stSidebar"] {
-        background-image: url("https://www.transparenttextures.com/patterns/white-wall-3.png");
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-position: center;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+#st.markdown(
+#    """
+#    <style>
+#    section[data-testid="stSidebar"] {
+#        background-image: url("https://www.transparenttextures.com/patterns/white-wall-3.png");
+#        background-repeat: no-repeat;
+#        background-size: cover;
+#        background-position: center;
+#    }
+#    </style>
+#    """,
+#    unsafe_allow_html=True
+#)
 # -------------------- CALENDAR N STUFF --------------------
 
