@@ -59,7 +59,7 @@ def generate_response(prompt: str, history: list) -> str:
                 "- sentence lengths can vary depending on the engagement of the user\n"
                 "- Use simple, empathetic language\n"
                 "- if the user poses the question in a forgein language, you reply in that language if you know it\n"
-                "- Focus on DBT skills when relevant\n"
+                "- Focus on DBT skills when relevant, give in depth information about DBT skills in layman's terms\n"
                 "- Never give medical advice\n"
                 "- your name is Prongles but you don't need to give that information unless asked directly.\n"
                 "- Ask open-ended questions to encourage reflection\n"
@@ -89,8 +89,80 @@ def get_dbt_response(user_input: str, history: list) -> str:
 
 
 # -----------------------------------------------------------
-tab1, tab2, tab3 = st.tabs(["Chat", "Resources", "About"])
+tab1, tab2, tab3, tab4 = st.tabs(["Calendar", "Chat", "Featured", "About"])
+
+# okay so the calendar is the main tab, you enter your ESM + voluntary entries, these entried can have labels
+
+# the chat part is to ask more about the skills ONLY, not where you write your problems smh
+
 with tab1:
+    calendar_options = {
+    "editable": True,
+    "selectable": True,
+    "headerToolbar": {
+        "left": "today prev,next",
+        "center": "title",
+        "right": "resourceTimelineDay,resourceTimelineWeek,resourceTimelineMonth",
+    },
+    "slotMinTime": "06:00:00",
+    "slotMaxTime": "18:00:00",
+    "initialView": "resourceTimelineDay",
+    "resourceGroupField": "building",
+    "resources": [
+        {"id": "a", "building": "Building A", "title": "Building A"},
+        {"id": "b", "building": "Building A", "title": "Building B"},
+        {"id": "c", "building": "Building B", "title": "Building C"},
+        {"id": "d", "building": "Building B", "title": "Building D"},
+        {"id": "e", "building": "Building C", "title": "Building E"},
+        {"id": "f", "building": "Building C", "title": "Building F"},
+    ],
+}
+calendar_events = [
+    {
+        "title": "Event 1",
+        "start": "2023-07-31T08:30:00",
+        "end": "2023-07-31T10:30:00",
+        "resourceId": "a",
+    },
+    {
+        "title": "Event 2",
+        "start": "2023-07-31T07:30:00",
+        "end": "2023-07-31T10:30:00",
+        "resourceId": "b",
+    },
+    {
+        "title": "Event 3",
+        "start": "2023-07-31T10:40:00",
+        "end": "2023-07-31T12:30:00",
+        "resourceId": "a",
+    }
+]
+custom_css="""
+    .fc-event-past {
+        opacity: 0.8;
+    }
+    .fc-event-time {
+        font-style: italic;
+    }
+    .fc-event-title {
+        font-weight: 700;
+    }
+    .fc-toolbar-title {
+        font-size: 2rem;
+    }
+"""
+
+calendar = calendar(
+    events=calendar_events,
+    options=calendar_options,
+    custom_css=custom_css,
+    key='calendar', # Assign a widget key to prevent state loss
+    )
+st.write(calendar)
+
+    
+
+with tab2:
     if "messages" not in st.session_state:
         st.session_state.messages = [
             {"role": "assistant", "content": "Hello! I'm your DBT companion. How can I help?"}
@@ -111,11 +183,11 @@ with tab1:
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.chat_message("assistant").write(response)
 
-with tab2:
+with tab3:
     st.write("DBT resources and exercises will appear here")
     st.write("Cute Ghosts on Drinking Straws by Kaboompics.com licensed under CC BY 4.0.")
 
-with tab3:
+with tab4:
     st.write("About this app and contact information")
     with st.container(border=True):  # 👈 Creates a bordered container
         col1, col2 = st.columns([1, 4])  # image column smaller than text
@@ -185,66 +257,3 @@ st.markdown(
 )
 # -------------------- CALENDAR N STUFF --------------------
 
-calendar_options = {
-    "editable": True,
-    "selectable": True,
-    "headerToolbar": {
-        "left": "today prev,next",
-        "center": "title",
-        "right": "resourceTimelineDay,resourceTimelineWeek,resourceTimelineMonth",
-    },
-    "slotMinTime": "06:00:00",
-    "slotMaxTime": "18:00:00",
-    "initialView": "resourceTimelineDay",
-    "resourceGroupField": "building",
-    "resources": [
-        {"id": "a", "building": "Building A", "title": "Building A"},
-        {"id": "b", "building": "Building A", "title": "Building B"},
-        {"id": "c", "building": "Building B", "title": "Building C"},
-        {"id": "d", "building": "Building B", "title": "Building D"},
-        {"id": "e", "building": "Building C", "title": "Building E"},
-        {"id": "f", "building": "Building C", "title": "Building F"},
-    ],
-}
-calendar_events = [
-    {
-        "title": "Event 1",
-        "start": "2023-07-31T08:30:00",
-        "end": "2023-07-31T10:30:00",
-        "resourceId": "a",
-    },
-    {
-        "title": "Event 2",
-        "start": "2023-07-31T07:30:00",
-        "end": "2023-07-31T10:30:00",
-        "resourceId": "b",
-    },
-    {
-        "title": "Event 3",
-        "start": "2023-07-31T10:40:00",
-        "end": "2023-07-31T12:30:00",
-        "resourceId": "a",
-    }
-]
-custom_css="""
-    .fc-event-past {
-        opacity: 0.8;
-    }
-    .fc-event-time {
-        font-style: italic;
-    }
-    .fc-event-title {
-        font-weight: 700;
-    }
-    .fc-toolbar-title {
-        font-size: 2rem;
-    }
-"""
-
-calendar = calendar(
-    events=calendar_events,
-    options=calendar_options,
-    custom_css=custom_css,
-    key='calendar', # Assign a widget key to prevent state loss
-    )
-st.write(calendar)
