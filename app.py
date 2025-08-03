@@ -102,9 +102,9 @@ with tab1:
     "headerToolbar": {
         "left": "today prev,next",
         "center": "title",
-        "right": "dayGridDay,dayGridWeek,dayGridMonth",
+        "right": "timeGridDay,timeGridWeek,dayGridMonth",
     },
-        "initialView": "dayGridMonth",  # Or "dayGridWeek", "dayGridDay"
+        "initialView": "dayGridMonth", 
         "editable": "true",
         "navLinks": "true",
         "selectable": "true",
@@ -127,6 +127,16 @@ custom_css="""
     }
     .fc-toolbar-title {
         font-size: 2rem;
+    }
+    # TESTING
+    .fc-timegrid-slot {
+        background-color: #f8f9fa;  /* Light grey */
+        border: 1px solid #dee2e6;
+    }
+    #TESTING
+    .fc-timegrid-slot-label {
+        color: #555;
+        font-weight: 600;
     }
 """
 
