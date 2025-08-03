@@ -114,8 +114,8 @@ calendar_events = [
     {"title": "Meeting 1", "start": "2025-08-05", "end": "2025-08-05", "color": "#FF6C6C"},
     {"title": "Meeting 2", "start": "2025-08-05", "end": "2025-08-05", "color": "#FFBD45"},
     {"title": "Test event", "start": "2025-08-05T14:00:00", "end": "2025-08-05T15:00:00", "color": "#FFBD45"},
-    {"title": "Until day end", "start": "2025-08-05T18:00:00", "end": "2025-08-05", "color": "#FFBD45"},
-    {"title": "URGE SPIKE", "start": "2025-08-05T19:00:00", "color": "#FFBD45"},
+    {"title": "Until day ends", "start": "2025-08-05T18:00:00", "end": "2025-08-05", "color": "#FFBD45"},
+    {"title": "URGE SPIKE", "start": "2025-08-05T16:00:00", "color": "#FFBD45"},
     {"title": "Project Deadline", "start": "2025-08-10", "color": "#FFBD45"},
 ]
 custom_css="""
