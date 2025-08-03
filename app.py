@@ -110,8 +110,9 @@ with tab1:
         "selectable": "true",
 }
 calendar_events = [
-    {"title": "Meeting", "start": "2025-08-05", "end": "2025-08-05", "color": "blue"},
-    {"title": "Project Deadline", "start": "2025-08-10", "color": "red"},
+    {"title": "Meeting", "start": "2025-08-05", "end": "2025-08-05", "color": "#FF6C6C"},
+    {"title": "Meeting2", "start": "2025-08-05", "end": "2025-08-05", "color": "#FFBD45"},
+    {"title": "Project Deadline", "start": "2025-08-10", "color": "#FFBD45"},
     {
         "title": "Event 1",
         "start": "2023-07-31T08:30:00",
