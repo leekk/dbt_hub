@@ -102,7 +102,12 @@ with tab1:
     "headerToolbar": {
         "left": "today prev,next",
         "center": "title",
-        "right": "resourceTimelineDay,resourceTimelineWeek,resourceTimelineMonth",
+        "right": "dayGridDay,dayGridWeek,dayGridMonth",
+    },
+        "initialView": "dayGridMonth",  # Or "dayGridWeek", "dayGridDay"
+        "editable": "true",
+        "navLinks": "true",
+        "selectable": "true",
     },
     "slotMinTime": "06:00:00",
     "slotMaxTime": "18:00:00",
