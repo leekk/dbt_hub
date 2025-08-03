@@ -110,27 +110,10 @@ with tab1:
         "selectable": "true",
 }
 calendar_events = [
-    {"title": "Meeting", "start": "2025-08-05", "end": "2025-08-05", "color": "#FF6C6C"},
-    {"title": "Meeting2", "start": "2025-08-05", "end": "2025-08-05", "color": "#FFBD45"},
+    {"title": "Past meeting", "start": "2025-08-01", "end": "2025-08-01", "color": "#FF6C6C"},
+    {"title": "Meeting 1", "start": "2025-08-05", "end": "2025-08-05", "color": "#FF6C6C"},
+    {"title": "Meeting 2", "start": "2025-08-05", "end": "2025-08-05", "color": "#FFBD45"},
     {"title": "Project Deadline", "start": "2025-08-10", "color": "#FFBD45"},
-    {
-        "title": "Event 1",
-        "start": "2023-07-31T08:30:00",
-        "end": "2023-07-31T10:30:00",
-        "resourceId": "a",
-    },
-    {
-        "title": "Event 2",
-        "start": "2023-07-31T07:30:00",
-        "end": "2023-07-31T10:30:00",
-        "resourceId": "b",
-    },
-    {
-        "title": "Event 3",
-        "start": "2023-07-31T10:40:00",
-        "end": "2023-07-31T12:30:00",
-        "resourceId": "a",
-    }
 ]
 custom_css="""
     .fc-event-past {
