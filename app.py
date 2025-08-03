@@ -117,7 +117,7 @@ calendar_events = [
 ]
 custom_css="""
     .fc-event-past {
-        opacity: 0.8;
+        opacity: 0.5;
     }
     .fc-event-time {
         font-style: italic;
@@ -130,12 +130,12 @@ custom_css="""
     }
     # TESTING
     .fc-timegrid-slot {
-        background-color: #f8f9fa;  /* Light grey */
+        background-color: #000000.;  /* Light grey */
         border: 1px solid #dee2e6;
     }
     #TESTING
     .fc-timegrid-slot-label {
-        color: #555;
+        color: #000000.;
         font-weight: 600;
     }
 """
