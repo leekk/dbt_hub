@@ -144,7 +144,7 @@ with tab1:
         with st.form("add_event_form", clear_on_submit=True):
             st.subheader("Add New Event")
             title = st.text_input("Event Title")
-            color = st.color_picker("Pick a color", "#4CAF50")
+            color = st.color_picker("Pick a color", "#4CAF50", "#4CAF50")
             submitted = st.form_submit_button("Add")
             if submitted:
                 new_event = {
@@ -155,7 +155,7 @@ with tab1:
                     "color": color
                 }
                 st.session_state.calendar_events.append(new_event)
-                st.experimental_rerun()
+                st.rerun()
 
 # --------------- Delete event on event click ---------------
     if calendar_output and calendar_output.get("eventClick"):
@@ -165,7 +165,7 @@ with tab1:
             st.session_state.calendar_events = [
                 e for e in st.session_state.calendar_events if e["id"] != clicked_event["id"]
             ]
-            st.experimental_rerun()
+            st.rerun()
     
 
 with tab2:
