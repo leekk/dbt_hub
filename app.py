@@ -188,7 +188,7 @@ with tab1:
                         "title": title,
                         "start": selected["start"],
                         "end": selected["end"],
-                        "color": color
+                        "color": color,
                         "label": label,
                         "details": details
                     }
