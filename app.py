@@ -11,7 +11,9 @@ from streamlit_calendar import calendar
 from datetime import datetime, timedelta
 import uuid
 
-st.toast("This is a quick notification!")
+import pytz
+tz = pytz.timezone("America/Toronto")
+
 # -------------------- TRYNG AI HERE --------------------
 os.environ["HF_TOKEN"] = st.secrets['HF_TOKEN']
 st.set_page_config(page_title="DBT Hub", page_icon="🐀", layout="wide")
@@ -147,7 +149,7 @@ with tab1:
         .fc-entry-event {
             background-color: white !important;
             color: black !important;
-            border-color: black !important;
+            border-color: white !important;
         }
     """
 
@@ -310,6 +312,7 @@ with tab1:
                         end_time = st.text_input("End Time", value=selected["end"].split("T")[1][:5] if "T" in selected["end"] else "00:00")
                 else:
                     color = "#FFFFFF"
+                    start_time = st.text_input("Start Time", value=selected["start"].split("T")[1][:5] if "T" in selected["start"] else "00:00")
                 
                 # Label selection for new events
                 label_options = ["Event", "Entry"]
@@ -346,6 +349,13 @@ with tab1:
                             "end": f"{selected['end'].split('T')[0]}T{end_time}:00",
                             "color": color,
                             "label": label,
+                            "details": details
+                        }
+                    if event_type == "Entry":
+                        new_event = {
+                            "id": str(uuid.uuid4()),
+                            "title": title,
+                            "start": f"{selected['start'].split('T')[0]}T{start_time}:00",
                             "details": details
                         }
                     else:
