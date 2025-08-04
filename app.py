@@ -113,8 +113,10 @@ with tab1:
         st.session_state.editing_event_id = None
     if "new_label" not in st.session_state:
         st.session_state.new_label = ""
+    if "calendar_key" not in st.session_state:
+        st.session_state.calendar_key = 0
 
-    # Calendar config (unchanged)
+    # Calendar config
     calendar_options = {
         "editable": True,
         "selectable": True,
@@ -160,10 +162,16 @@ with tab1:
             events=st.session_state.calendar_events,
             options=calendar_options,
             custom_css=custom_css,
-            key="calendar"
+            key=f"calendar_{st.session_state.calendar_key}"
         )
 
     with col2:
+        # Reset states when needed
+        if st.session_state.get("reset_calendar"):
+            st.session_state.calendar_key += 1
+            st.session_state.reset_calendar = False
+            st.rerun()
+
         # Handle calendar interactions
         if calendar_output and calendar_output.get("dateClick"):
             clicked = calendar_output["dateClick"]
@@ -190,7 +198,7 @@ with tab1:
                 (e for e in st.session_state.calendar_events if e["id"] == clicked_event["id"]),
                 None
             )
-            st.rerun() 
+            st.rerun()
 
         # Edit form
         if st.session_state.editing_event_id:
@@ -199,7 +207,7 @@ with tab1:
                 if e["id"] == st.session_state.editing_event_id
             )
             
-            with st.form("edit_event_form"):
+            with st.form(key="edit_event_form"):
                 st.subheader("Edit Event")
                 title = st.text_input("Event Title", value=event_to_edit.get("title", "Untitled Event"))
                 
@@ -274,7 +282,9 @@ with tab1:
                         end_date = event_to_edit["end"].split("T")[0]
                         event_to_edit["start"] = f"{start_date}T{start_time}:00"
                         event_to_edit["end"] = f"{end_date}T{end_time}:00"
+                    st.session_state.calendar_key += 1
                     st.session_state.editing_event_id = None
+                    st.session_state.reset_calendar = True
                     st.rerun()
                 
                 if delete_clicked:
@@ -282,17 +292,20 @@ with tab1:
                         e for e in st.session_state.calendar_events 
                         if e["id"] != st.session_state.editing_event_id
                     ]
+                    st.session_state.calendar_key += 1
                     st.session_state.editing_event_id = None
+                    st.session_state.reset_calendar = True
                     st.rerun()
                 
                 if cancel_clicked:
                     st.session_state.editing_event_id = None
+                    st.session_state.reset_calendar = True
                     st.rerun()
 
         # Add event form
         elif calendar_output and calendar_output.get("select"):
             selected = calendar_output["select"]
-            with st.form("add_event_form"):
+            with st.form(key="add_event_form"):
                 st.subheader("Add New Event")
                 
                 event_type = st.radio("Event Type", ["Regular Event", "Entry"])
@@ -312,12 +325,11 @@ with tab1:
                     
                     col1, col2 = st.columns(2)
                     with col1:
-                        start_time = st.text_input("Start Time", value=selected["start"].split("T")[1][:5] if "T" in selected["start"] else "00:00")
+                        start_time = st.text_input("Start Time", value=pd.to_datetime(selected["start"]).strftime("%H:%M") if "T" in selected["start"] else "00:00")
                     with col2:
-                        end_time = st.text_input("End Time", value=selected["end"].split("T")[1][:5] if "T" in selected["end"] else "00:00")
+                        end_time = st.text_input("End Time", value=pd.to_datetime(selected["end"]).strftime("%H:%M") if "T" in selected["end"] else "00:00")
                 else:
                     color = "#FFFFFF"
-                    start_time = st.text_input("Start Time", value=selected["start"].split("T")[1][:5] if "T" in selected["start"] else "00:00")
                 
                 # Label selection for new events
                 label_options = ["Event", "Entry"]
@@ -361,23 +373,31 @@ with tab1:
                                 "details": details
                             }
                             st.session_state.calendar_events.append(new_event)
-                            st.experimental_rerun()
+                            st.session_state.calendar_key += 1
+                            st.session_state.reset_calendar = True
+                            st.rerun()
                         except ValueError:
                             st.error("Please enter time in HH:MM format")
                     else:  # Entry
-                        now = datetime.now(pytz.utc)  # Get current time in UTC
+                        # Use browser's timezone-adjusted time
+                        now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
                         new_event = {
                             "id": str(uuid.uuid4()),
                             "title": title,
-                            "start": now.isoformat(),
-                            "end": now.isoformat(),
+                            "start": now,
+                            "end": now,
                             "color": "#FFFFFF",
                             "label": "Entry",
                             "details": details,
                             "className": "fc-entry-event"
                         }
-                        
+                        st.session_state.calendar_events.append(new_event)
+                        st.session_state.calendar_key += 1
+                        st.session_state.reset_calendar = True
+                        st.rerun()
+                
                 if cancel_clicked:
+                    st.session_state.reset_calendar = True
                     st.rerun()
     
 
