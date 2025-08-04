@@ -110,8 +110,6 @@ with tab1:
     calendar_options = {
         "editable": True,
         "selectable": True,
-        "selectMirror": True,
-        "selectHelper": True,
         "headerToolbar": {
             "left": "today prev,next",
             "center": "title",
