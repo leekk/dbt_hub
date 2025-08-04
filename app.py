@@ -190,7 +190,7 @@ with tab1:
                 (e for e in st.session_state.calendar_events if e["id"] == clicked_event["id"]),
                 None
             )
-            st.experimental_rerun() 
+            st.rerun() 
 
         # Edit form
         if st.session_state.editing_event_id:
