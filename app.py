@@ -206,60 +206,44 @@ with tab1:
             
             with st.form("edit_event_form"):
                 st.subheader("Edit Event")
+            
                 title = st.text_input("Event Title", value=event_to_edit.get("title", "Untitled Event"))
-                
-                # Only show color picker if not an entry
-                if event_to_edit.get("label") != "Entry":
-                    color_options = {
-                        "Red": "#FF6C6C",
-                        "Orange": "#FFBD45",
-                        "Green": "#4CAF50",
-                        "Blue": "#2196F3",
-                        "Purple": "#9C27B0"
-                    }
-                    current_color = event_to_edit.get("color", "#4CAF50")
-                    color_name = st.selectbox(
-                        "Pick a color", 
-                        list(color_options.keys()),
-                        index=list(color_options.values()).index(current_color) if current_color in color_options.values() else 0
-                    )
-                    color = color_options[color_name]
-                else:
-                    color = "#FFFFFF"
-
-                # Label selection with new label option
+            
+                # Determine if this is an entry
+                current_label = event_to_edit.get("label", "Event")
                 label_options = ["Event", "Entry"]
                 if st.session_state.new_label:
                     label_options.insert(1, st.session_state.new_label)
-                
-                current_label = event_to_edit.get("label", "Event")
+            
                 label = st.selectbox(
-                    is_entry = (label == "Entry")
-                    col1, col2 = st.columns(2)
-                    with col1:
-                    start_time = st.text_input("Start Time", value=event_to_edit["start"].split("T")[1][:5] if "T" in event_to_edit["start"] else "00:00")
-                    with col2:
-                    end_time = st.text_input("End Time", value=event_to_edit["end"].split("T")[1][:5] if "T" in event_to_edit["end"] else "00:00")
                     "Label",
                     label_options + ["Add new label..."],
                     index=label_options.index(current_label) if current_label in label_options else 0
                 )
-                
+            
                 if label == "Add new label...":
                     new_label = st.text_input("New label name", key="new_label_input")
                     if new_label:
                         st.session_state.new_label = new_label
                         st.rerun()
                     label = st.session_state.new_label
-
-                # Time inputs if not an entry
+            
+                is_entry = (label == "Entry")
+            
+                # ⬇️ PLACE THIS HERE
                 if not is_entry:
                     col1, col2 = st.columns(2)
                     with col1:
-                        start_time = st.text_input("Start Time", value=event_to_edit["start"].split("T")[1][:5] if "T" in event_to_edit["start"] else "00:00")
+                        start_time = st.text_input(
+                            "Start Time", 
+                            value=event_to_edit["start"].split("T")[1][:5] if "T" in event_to_edit["start"] else "00:00"
+                        )
                     with col2:
-                        end_time = st.text_input("End Time", value=event_to_edit["end"].split("T")[1][:5] if "T" in event_to_edit["end"] else "00:00")
-
+                        end_time = st.text_input(
+                            "End Time", 
+                            value=event_to_edit["end"].split("T")[1][:5] if "T" in event_to_edit["end"] else "00:00"
+                        )
+            
                 details = st.text_area("Details", value=event_to_edit.get("details", ""))
                 
                 col1, col2, col3 = st.columns(3)
