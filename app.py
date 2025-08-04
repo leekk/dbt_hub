@@ -113,6 +113,11 @@ with tab1:
         "selectMirror": True,
         "selectHelper": True,
         "selectOverlap": True,
+# testing shit
+        "slotDuration": "00:15:00",  # Each time slot is 15 mins
+        "slotMinTime": "00:00:00",   # Earliest time shown
+        "slotMaxTime": "24:00:00",   # Latest time shown
+        "selectLongPressDelay": 0,   # Enable click instead of drag
         "headerToolbar": {
             "left": "today prev,next",
             "center": "title",
@@ -128,6 +133,12 @@ with tab1:
         }
         .fc-toolbar-title {
             font-size: 2rem;
+        }
+        .fc-event-past {
+            opacity: 0.5;
+        }
+        .fc-event-time {
+            font-style: italic;
         }
     """
 
@@ -160,7 +171,16 @@ with tab1:
 
             # color = st.color_picker("Pick a color", "#4CAF50", "#4CAF50")
             # can delete it works
+                label = st.selectbox("Label", ["Event", "Entry", "Add new label..."])
+                if label == "Add new label...":
+                    new_label = st.text_input("New label")
+                    if new_label:
+                        label = new_label
 
+                details = ""
+                if label.lower() == "entry":
+                    details = st.text_area("Add details")
+                    
                 submitted = st.form_submit_button("Add")
                 if submitted:
                     new_event = {
@@ -169,9 +189,12 @@ with tab1:
                         "start": selected["start"],
                         "end": selected["end"],
                         "color": color
+                        "label": label,
+                        "details": details
                     }
                     st.session_state.calendar_events.append(new_event)
                     st.rerun()
+                    st.success("Event added!")
 
 # --------------- Delete event on event click ---------------
         if calendar_output and calendar_output.get("eventClick"):
@@ -182,6 +205,7 @@ with tab1:
                     e for e in st.session_state.calendar_events if e["id"] != clicked_event["id"]
                 ]
                 st.rerun()
+                st.success("Event added!")
     
 
 with tab2:
