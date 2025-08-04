@@ -110,12 +110,15 @@ with tab1:
     calendar_options = {
         "editable": True,
         "selectable": True,
+        "selectMirror": True,
+        "selectHelper": True,
+        "selectOverlap": True,
         "headerToolbar": {
             "left": "today prev,next",
             "center": "title",
             "right": "timeGridDay,timeGridWeek,dayGridMonth",
         },
-        "initialView": "timeGridWeek",
+        "initialView": "dayGridMonth",
         "navLinks": True,
     }
 
@@ -129,41 +132,56 @@ with tab1:
     """
 
 # --------------- Show calendar and capture user input ---------------
-    calendar_output = calendar(
-        events=st.session_state.calendar_events,
-        options=calendar_options,
-        custom_css=custom_css,
-        key="calendar"
-    )
+    col1, col2 = st.columns([2, 1]) 
+    with col1: 
+        calendar_output = calendar(
+            events=st.session_state.calendar_events,
+            options=calendar_options,
+            custom_css=custom_css,
+            key="calendar"
+        )
 
 # --------------- Add event on time slot selection ---------------
-    if calendar_output and calendar_output.get("select"):
-        selected = calendar_output["select"]
-        with st.form("add_event_form", clear_on_submit=True):
-            st.subheader("Add New Event")
-            title = st.text_input("Event Title")
-            color = st.color_picker("Pick a color", "#4CAF50", "#4CAF50")
-            submitted = st.form_submit_button("Add")
-            if submitted:
-                new_event = {
-                    "id": str(uuid.uuid4()),
-                    "title": title,
-                    "start": selected["start"],
-                    "end": selected["end"],
-                    "color": color
+    with col2:
+        if calendar_output and calendar_output.get("select"):
+            selected = calendar_output["select"]
+            with st.form("add_event_form", clear_on_submit=True):
+                st.subheader("Add New Event")
+                title = st.text_input("Event Title")
+                color_options = {
+                    "Red": "#FF6C6C",
+                    "Orange": "#FFBD45",
+                    "Green": "#4CAF50",
+                    "Blue": "#2196F3",
+                    "Purple": "#9C27B0"
                 }
-                st.session_state.calendar_events.append(new_event)
-                st.rerun()
+                color_name = st.selectbox("Pick a color", list(color_options.keys()))
+                color = color_options[color_name]
+
+            # color = st.color_picker("Pick a color", "#4CAF50", "#4CAF50")
+            # can delete it works
+
+                submitted = st.form_submit_button("Add")
+                if submitted:
+                    new_event = {
+                        "id": str(uuid.uuid4()),
+                        "title": title,
+                        "start": selected["start"],
+                        "end": selected["end"],
+                        "color": color
+                    }
+                    st.session_state.calendar_events.append(new_event)
+                    st.rerun()
 
 # --------------- Delete event on event click ---------------
-    if calendar_output and calendar_output.get("eventClick"):
-        clicked_event = calendar_output["eventClick"]["event"]
-        st.warning(f"Delete event: **{clicked_event['title']}**?")
-        if st.button("Delete Event"):
-            st.session_state.calendar_events = [
-                e for e in st.session_state.calendar_events if e["id"] != clicked_event["id"]
-            ]
-            st.rerun()
+        if calendar_output and calendar_output.get("eventClick"):
+            clicked_event = calendar_output["eventClick"]["event"]
+            st.warning(f"Delete event: **{clicked_event['title']}**?")
+            if st.button("Delete Event"):
+                st.session_state.calendar_events = [
+                    e for e in st.session_state.calendar_events if e["id"] != clicked_event["id"]
+                ]
+                st.rerun()
     
 
 with tab2:
