@@ -4,11 +4,14 @@ import requests
 import random
 import time
 import json
-# I'm having heart palpations rn haha
 import os
 from huggingface_hub import InferenceClient
 from streamlit_calendar import calendar
-from datetime import datetime, timedelta
+from datetime import datetime
+
+import pytz
+tz = pytz.timezone("America/Toronto")
+
 import uuid
 
 
@@ -147,7 +150,13 @@ with tab1:
         .fc-entry-event {
             background-color: white !important;
             color: black !important;
-            border-color: black !important;
+            border-color: white !important;
+        }
+        .fc-entry-event {
+            background-color: #fff !important;
+            color: #000 !important;
+            border: 1px dashed #999 !important;
+            font-style: italic;
         }
     """
 
@@ -225,6 +234,12 @@ with tab1:
                 
                 current_label = event_to_edit.get("label", "Event")
                 label = st.selectbox(
+                    is_entry = (label == "Entry")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                    start_time = st.text_input("Start Time", value=event_to_edit["start"].split("T")[1][:5] if "T" in event_to_edit["start"] else "00:00")
+                    with col2:
+                    end_time = st.text_input("End Time", value=event_to_edit["end"].split("T")[1][:5] if "T" in event_to_edit["end"] else "00:00")
                     "Label",
                     label_options + ["Add new label..."],
                     index=label_options.index(current_label) if current_label in label_options else 0
@@ -238,7 +253,7 @@ with tab1:
                     label = st.session_state.new_label
 
                 # Time inputs if not an entry
-                if label != "Entry":
+                if not is_entry:
                     col1, col2 = st.columns(2)
                     with col1:
                         start_time = st.text_input("Start Time", value=event_to_edit["start"].split("T")[1][:5] if "T" in event_to_edit["start"] else "00:00")
@@ -340,28 +355,29 @@ with tab1:
                 if add_clicked:
                     if event_type == "Regular Event":
                         new_event = {
-                            "id": str(uuid.uuid4()),
-                            "title": title,
-                            "start": f"{selected['start'].split('T')[0]}T{start_time}:00",
-                            "end": f"{selected['end'].split('T')[0]}T{end_time}:00",
-                            "color": color,
-                            "label": label,
-                            "details": details
+                        "id": str(uuid.uuid4()),
+                        "title": title,
+                        "start": f"{selected['start'].split('T')[0]}T{start_time}:00",
+                        "end": f"{selected['end'].split('T')[0]}T{end_time}:00",
+                        "color": color,
+                        "label": label,
+                        "details": details
                         }
-                    else:
+                    else:  # Entry
+                        timestamp = datetime.now(tz).isoformat()
                         new_event = {
                             "id": str(uuid.uuid4()),
                             "title": title,
-                            "start": datetime.now().isoformat(),
-                            "end": datetime.now().isoformat(),
+                            "start": timestamp,
+                            "end": timestamp,
                             "color": color,
                             "label": "Entry",
                             "details": details,
                             "className": "fc-entry-event"
                         }
-                    
-                    st.session_state.calendar_events.append(new_event)
-                    st.rerun()
+
+                st.session_state.calendar_events.append(new_event)
+                st.rerun()
                 
                 if cancel_clicked:
                     st.rerun()
