@@ -14,6 +14,8 @@ tz = pytz.timezone("America/Toronto")
 
 import uuid
 
+st.toast("This is a quick notification!")
+
 
 # -------------------- TRYNG AI HERE --------------------
 os.environ["HF_TOKEN"] = st.secrets['HF_TOKEN']
