@@ -96,7 +96,15 @@ tab1, tab2, tab3, tab4 = st.tabs(["Calendar", "Chat", "Featured", "About"])
 # the chat part is to ask more about the skills ONLY, not where you write your problems smh
 
 with tab1:
-    calendar_options = {
+    if "calendar_events" not in st.session_state:
+    st.session_state.calendar_events = [
+        {"id": str(uuid.uuid4()), "title": "Past meeting", "start": "2025-08-01", "end": "2025-08-01", "color": "#FF6C6C"},
+        {"id": str(uuid.uuid4()), "title": "Meeting 1", "start": "2025-08-05T13:00:00", "end": "2025-08-05T14:00:00", "color": "#FF6C6C"},
+        {"id": str(uuid.uuid4()), "title": "URGE SPIKE", "start": "2025-08-05T16:00:00", "color": "#FFBD45"},
+    ]
+
+# --------------- Calendar config ---------------
+calendar_options = {
     "editable": True,
     "selectable": True,
     "headerToolbar": {
@@ -104,53 +112,55 @@ with tab1:
         "center": "title",
         "right": "timeGridDay,timeGridWeek,dayGridMonth",
     },
-        "initialView": "dayGridMonth", 
-        "editable": "true",
-        "navLinks": "true",
-        "selectable": "true",
+    "initialView": "timeGridWeek",
+    "navLinks": True,
 }
-calendar_events = [
-    {"title": "Past meeting", "start": "2025-08-01", "end": "2025-08-01", "color": "#FF6C6C"},
-    {"title": "Meeting 1", "start": "2025-08-05", "end": "2025-08-05", "color": "#FF6C6C"},
-    {"title": "Meeting 2", "start": "2025-08-05", "end": "2025-08-05", "color": "#FFBD45"},
-    {"title": "Test event", "start": "2025-08-05T14:00:00", "end": "2025-08-05T15:00:00", "color": "#FFBD45"},
-    {"title": "Until day ends", "start": "2025-08-05T18:00:00", "end": "2025-08-05", "color": "#FFBD45"},
-    {"title": "URGE SPIKE", "start": "2025-08-05T16:00:00", "color": "#FFBD45"},
-    {"title": "Project Deadline", "start": "2025-08-10", "color": "#FFBD45"},
-]
-custom_css="""
-    .fc-event-past {
-        opacity: 0.5;
-    }
-    .fc-event-time {
-        font-style: italic;
-    }
+
+custom_css = """
     .fc-event-title {
         font-weight: 700;
     }
     .fc-toolbar-title {
         font-size: 2rem;
     }
-    # TESTING
-    .fc-timegrid-slot {
-        background-color: #000000.;  /* Light grey */
-        border: 1px solid #dee2e6;
-    }
-    #TESTING
-    .fc-timegrid-slot-label {
-        color: #000000.;
-        font-weight: 600;
-    }
 """
 
-calendar = calendar(
-    events=calendar_events,
+# --------------- Show calendar and capture user input ---------------
+calendar_output = calendar(
+    events=st.session_state.calendar_events,
     options=calendar_options,
     custom_css=custom_css,
-    key='calendar', # Assign a widget key to prevent state loss
-    )
-st.write(calendar)
+    key="calendar"
+)
 
+# --------------- Add event on time slot selection ---------------
+if calendar_output and calendar_output.get("select"):
+    selected = calendar_output["select"]
+    with st.form("add_event_form", clear_on_submit=True):
+        st.subheader("Add New Event")
+        title = st.text_input("Event Title")
+        color = st.color_picker("Pick a color", "#4CAF50")
+        submitted = st.form_submit_button("Add")
+        if submitted:
+            new_event = {
+                "id": str(uuid.uuid4()),
+                "title": title,
+                "start": selected["start"],
+                "end": selected["end"],
+                "color": color
+            }
+            st.session_state.calendar_events.append(new_event)
+            st.experimental_rerun()
+
+# --------------- Delete event on event click ---------------
+if calendar_output and calendar_output.get("eventClick"):
+    clicked_event = calendar_output["eventClick"]["event"]
+    st.warning(f"Delete event: **{clicked_event['title']}**?")
+    if st.button("Delete Event"):
+        st.session_state.calendar_events = [
+            e for e in st.session_state.calendar_events if e["id"] != clicked_event["id"]
+        ]
+        st.experimental_rerun()
     
 
 with tab2:
