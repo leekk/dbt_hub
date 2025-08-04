@@ -8,7 +8,7 @@ import json
 import os
 from huggingface_hub import InferenceClient
 from streamlit_calendar import calendar
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 
 
@@ -117,7 +117,10 @@ with tab1:
         "slotDuration": "00:15:00",  # Each time slot is 15 mins
         "slotMinTime": "00:00:00",   # Earliest time shown
         "slotMaxTime": "24:00:00",   # Latest time shown
-        "selectLongPressDelay": 0,   # Enable click instead of drag
+        # "selectLongPressDelay": 0,   # Enable click instead of drag
+# testing even other shit
+        "dateClick": True,
+
         "headerToolbar": {
             "left": "today prev,next",
             "center": "title",
@@ -154,6 +157,14 @@ with tab1:
 
 # --------------- Add event on time slot selection ---------------
     with col2:
+        if calendar_output and calendar_output.get("dateClick"):
+            clicked = calendar_output["dateClick"]
+            st.session_state.selected = {
+            "start": clicked["date"],
+            "end": clicked["date"],  # You can auto-add 15 mins to this if desired
+            "allDay": clicked["allDay"]
+            }
+
         if calendar_output and calendar_output.get("select"):
             selected = calendar_output["select"]
             with st.form("add_event_form", clear_on_submit=True):
