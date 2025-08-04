@@ -10,9 +10,10 @@ from huggingface_hub import InferenceClient
 from streamlit_calendar import calendar
 from datetime import datetime, timedelta
 import uuid
+import pandas as pd
 
 import pytz
-tz = pytz.timezone("America/Toronto")
+#tz = pytz.timezone("America/Toronto")
 
 # -------------------- TRYNG AI HERE --------------------
 os.environ["HF_TOKEN"] = st.secrets['HF_TOKEN']
@@ -186,9 +187,10 @@ with tab1:
             clicked_event = calendar_output["eventClick"]["event"]
             st.session_state.editing_event_id = clicked_event["id"]
             st.session_state.selected_event = next(
-                e for e in st.session_state.calendar_events if e["id"] == clicked_event["id"]
+                (e for e in st.session_state.calendar_events if e["id"] == clicked_event["id"]),
+                None
             )
-            st.rerun()
+            st.experimental_rerun() 
 
         # Edit form
         if st.session_state.editing_event_id:
@@ -243,10 +245,13 @@ with tab1:
                 if label != "Entry":
                     col1, col2 = st.columns(2)
                     with col1:
-                        start_time = st.text_input("Start Time", value=event_to_edit["start"].split("T")[1][:5] if "T" in event_to_edit["start"] else "00:00")
+                        start_time = st.text_input("Start Time", 
+                            value=pd.to_datetime(event_to_edit["start"]).strftime("%H:%M") 
+                            if "T" in event_to_edit["start"] else "00:00")
                     with col2:
-                        end_time = st.text_input("End Time", value=event_to_edit["end"].split("T")[1][:5] if "T" in event_to_edit["end"] else "00:00")
-
+                        end_time = st.text_input("End Time", 
+                            value=pd.to_datetime(event_to_edit["end"]).strftime("%H:%M") 
+                            if "T" in event_to_edit["end"] else "00:00")
                 details = st.text_area("Details", value=event_to_edit.get("details", ""))
                 
                 col1, col2, col3 = st.columns(3)
@@ -342,37 +347,36 @@ with tab1:
                 
                 if add_clicked:
                     if event_type == "Regular Event":
+                        try:
+                            # Validate time format
+                            datetime.strptime(start_time, "%H:%M")
+                            datetime.strptime(end_time, "%H:%M")
+                            new_event = {
+                                "id": str(uuid.uuid4()),
+                                "title": title,
+                                "start": f"{selected['start'].split('T')[0]}T{start_time}:00",
+                                "end": f"{selected['end'].split('T')[0]}T{end_time}:00",
+                                "color": color,
+                                "label": label,
+                                "details": details
+                            }
+                            st.session_state.calendar_events.append(new_event)
+                            st.experimental_rerun()
+                        except ValueError:
+                            st.error("Please enter time in HH:MM format")
+                    else:  # Entry
+                        now = datetime.now(pytz.utc)  # Get current time in UTC
                         new_event = {
                             "id": str(uuid.uuid4()),
                             "title": title,
-                            "start": f"{selected['start'].split('T')[0]}T{start_time}:00",
-                            "end": f"{selected['end'].split('T')[0]}T{end_time}:00",
-                            "color": color,
-                            "label": label,
-                            "details": details
-                        }
-                    if event_type == "Entry":
-                        new_event = {
-                            "id": str(uuid.uuid4()),
-                            "title": title,
-                            "start": f"{selected['start'].split('T')[0]}T{start_time}:00",
-                            "details": details
-                        }
-                    else:
-                        new_event = {
-                            "id": str(uuid.uuid4()),
-                            "title": title,
-                            "start": datetime.now().isoformat(),
-                            "end": datetime.now().isoformat(),
-                            "color": color,
+                            "start": now.isoformat(),
+                            "end": now.isoformat(),
+                            "color": "#FFFFFF",
                             "label": "Entry",
                             "details": details,
                             "className": "fc-entry-event"
                         }
-                    
-                    st.session_state.calendar_events.append(new_event)
-                    st.rerun()
-                
+                        
                 if cancel_clicked:
                     st.rerun()
     
