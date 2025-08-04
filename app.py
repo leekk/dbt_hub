@@ -105,24 +105,23 @@ with tab1:
             {"id": str(uuid.uuid4()), "title": "Meeting 1", "start": "2025-08-05T13:00:00", "end": "2025-08-05T14:00:00", "color": "#FF6C6C"},
             {"id": str(uuid.uuid4()), "title": "URGE SPIKE", "start": "2025-08-05T16:00:00", "color": "#FFBD45"},
         ]
-
+    
     if "editing_event_id" not in st.session_state:
         st.session_state.editing_event_id = None
-# --------------- Calendar config ---------------
+    if "new_label" not in st.session_state:
+        st.session_state.new_label = ""
+
+    # Calendar config (unchanged)
     calendar_options = {
         "editable": True,
         "selectable": True,
         "selectMirror": True,
         "selectHelper": True,
         "selectOverlap": True,
-# testing shit
-        "slotDuration": "00:15:00",  # Each time slot is 15 mins
-        "slotMinTime": "00:00:00",   # Earliest time shown
-        "slotMaxTime": "24:00:00",   # Latest time shown
-        # "selectLongPressDelay": 0,   # Enable click instead of drag
-# testing even other shit
+        "slotDuration": "00:15:00",
+        "slotMinTime": "00:00:00",
+        "slotMaxTime": "24:00:00",
         "dateClick": True,
-
         "headerToolbar": {
             "left": "today prev,next",
             "center": "title",
@@ -145,9 +144,13 @@ with tab1:
         .fc-event-time {
             font-style: italic;
         }
+        .fc-entry-event {
+            background-color: white !important;
+            color: black !important;
+            border-color: black !important;
+        }
     """
 
-# --------------- Show calendar and capture user input ---------------
     col1, col2 = st.columns([2, 1]) 
     with col1: 
         calendar_output = calendar(
@@ -157,16 +160,16 @@ with tab1:
             key="calendar"
         )
 
-# --------------- Add event on time slot selection ---------------
     with col2:
+        # Handle calendar interactions
         if calendar_output and calendar_output.get("dateClick"):
             clicked = calendar_output["dateClick"]
             st.session_state.selected = {
-            "start": clicked["date"],
-            "end": clicked["date"],  # You can auto-add 15 mins to this if desired
-            "allDay": clicked["allDay"]
+                "start": clicked["date"],
+                "end": clicked["date"],
+                "allDay": clicked["allDay"]
             }
-            st.session_state.editing_event_id = None 
+            st.session_state.editing_event_id = None
 
         if calendar_output and calendar_output.get("select"):
             selected = calendar_output["select"]
@@ -179,27 +182,13 @@ with tab1:
 
         if calendar_output and calendar_output.get("eventClick"):
             clicked_event = calendar_output["eventClick"]["event"]
-            event_id = clicked_event["id"]
-            
-            # NEW: Toggle between edit and delete modes
-            if st.session_state.editing_event_id == event_id:
-                # If we're already editing this event, show delete confirmation
-                st.warning(f"Delete event: **{clicked_event['title']}**?")
-                if st.button("Delete Event"):
-                    st.session_state.calendar_events = [
-                        e for e in st.session_state.calendar_events if e["id"] != event_id
-                    ]
-                    st.session_state.editing_event_id = None
-                    st.rerun()
-            else:
-                # Otherwise, enter edit mode
-                st.session_state.editing_event_id = event_id
-                st.session_state.selected_event = next(
-                    e for e in st.session_state.calendar_events if e["id"] == event_id
-                )
-                st.rerun()
+            st.session_state.editing_event_id = clicked_event["id"]
+            st.session_state.selected_event = next(
+                e for e in st.session_state.calendar_events if e["id"] == clicked_event["id"]
+            )
+            st.rerun()
 
-        # NEW: Show edit form when in edit mode
+        # Edit form
         if st.session_state.editing_event_id:
             event_to_edit = next(
                 e for e in st.session_state.calendar_events 
@@ -208,92 +197,173 @@ with tab1:
             
             with st.form("edit_event_form"):
                 st.subheader("Edit Event")
-                title = st.text_input("Event Title", value=event_to_edit.get("title", ""))
+                title = st.text_input("Event Title", value=event_to_edit.get("title", "Untitled Event"))
                 
-                color_options = {
-                    "Red": "#FF6C6C",
-                    "Orange": "#FFBD45",
-                    "Green": "#4CAF50",
-                    "Blue": "#2196F3",
-                    "Purple": "#9C27B0"
-                }
-                current_color = event_to_edit.get("color", "#4CAF50")
-                color_name = st.selectbox(
-                    "Pick a color", 
-                    list(color_options.keys()),
-                    index=list(color_options.values()).index(current_color)
-                )
-                color = color_options[color_name]
+                # Only show color picker if not an entry
+                if event_to_edit.get("label") != "Entry":
+                    color_options = {
+                        "Red": "#FF6C6C",
+                        "Orange": "#FFBD45",
+                        "Green": "#4CAF50",
+                        "Blue": "#2196F3",
+                        "Purple": "#9C27B0"
+                    }
+                    current_color = event_to_edit.get("color", "#4CAF50")
+                    color_name = st.selectbox(
+                        "Pick a color", 
+                        list(color_options.keys()),
+                        index=list(color_options.values()).index(current_color) if current_color in color_options.values() else 0
+                    )
+                    color = color_options[color_name]
+                else:
+                    color = "#FFFFFF"
 
+                # Label selection with new label option
+                label_options = ["Event", "Entry"]
+                if st.session_state.new_label:
+                    label_options.insert(1, st.session_state.new_label)
+                
                 current_label = event_to_edit.get("label", "Event")
                 label = st.selectbox(
-                    "Label", 
-                    ["Event", "Entry", "Add new label..."],
-                    index=["Event", "Entry", "Add new label..."].index(current_label)
+                    "Label",
+                    label_options + ["Add new label..."],
+                    index=label_options.index(current_label) if current_label in label_options else 0
                 )
-                if label == "Add new label...":
-                    new_label = st.text_input("New label")
-                    if new_label:
-                        label = new_label
-
-                if label.lower() == "entry":
-                    details = st.text_area(
-                        "Add details", 
-                        value=event_to_edit.get("details", "")
-                    )
                 
-                if st.form_submit_button("Save Changes"):
-                    # Update the event
+                if label == "Add new label...":
+                    new_label = st.text_input("New label name", key="new_label_input")
+                    if new_label:
+                        st.session_state.new_label = new_label
+                        st.rerun()
+                    label = st.session_state.new_label
+
+                # Time inputs if not an entry
+                if label != "Entry":
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        start_time = st.text_input("Start Time", value=event_to_edit["start"].split("T")[1][:5] if "T" in event_to_edit["start"] else "00:00")
+                    with col2:
+                        end_time = st.text_input("End Time", value=event_to_edit["end"].split("T")[1][:5] if "T" in event_to_edit["end"] else "00:00")
+
+                details = st.text_area("Details", value=event_to_edit.get("details", ""))
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    save_clicked = st.form_submit_button("Save Changes")
+                with col2:
+                    delete_clicked = st.form_submit_button("Delete")
+                with col3:
+                    cancel_clicked = st.form_submit_button("Cancel")
+                
+                if save_clicked:
                     event_to_edit.update({
                         "title": title,
                         "color": color,
                         "label": label,
-                        "details": details if label.lower() == "entry" else ""
+                        "details": details
                     })
+                    if label != "Entry":
+                        start_date = event_to_edit["start"].split("T")[0]
+                        end_date = event_to_edit["end"].split("T")[0]
+                        event_to_edit["start"] = f"{start_date}T{start_time}:00"
+                        event_to_edit["end"] = f"{end_date}T{end_time}:00"
                     st.session_state.editing_event_id = None
                     st.rerun()
                 
-                if st.form_submit_button("Cancel"):
+                if delete_clicked:
+                    st.session_state.calendar_events = [
+                        e for e in st.session_state.calendar_events 
+                        if e["id"] != st.session_state.editing_event_id
+                    ]
+                    st.session_state.editing_event_id = None
+                    st.rerun()
+                
+                if cancel_clicked:
                     st.session_state.editing_event_id = None
                     st.rerun()
 
+        # Add event form
         elif calendar_output and calendar_output.get("select"):
             selected = calendar_output["select"]
-            with st.form("add_event_form", clear_on_submit=True):
+            with st.form("add_event_form"):
                 st.subheader("Add New Event")
-                title = st.text_input("Event Title")
-                color_options = {
-                    "Red": "#FF6C6C",
-                    "Orange": "#FFBD45",
-                    "Green": "#4CAF50",
-                    "Blue": "#2196F3",
-                    "Purple": "#9C27B0"
-                }
-                color_name = st.selectbox("Pick a color", list(color_options.keys()))
-                color = color_options[color_name]
-
-                label = st.selectbox("Label", ["Event", "Entry", "Add new label..."])
-                if label == "Add new label...":
-                    new_label = st.text_input("New label")
-                    if new_label:
-                        label = new_label
-
-                details = ""
-                if label.lower() == "entry":
-                    details = st.text_area("Add details")
-                    
-                submitted = st.form_submit_button("Add")
-                if submitted:
-                    new_event = {
-                        "id": str(uuid.uuid4()),
-                        "title": title,
-                        "start": selected["start"],
-                        "end": selected["end"],
-                        "color": color,
-                        "label": label,
-                        "details": details
+                
+                event_type = st.radio("Event Type", ["Regular Event", "Entry"])
+                
+                title = st.text_input("Event Title", value="Untitled Event")
+                
+                if event_type == "Regular Event":
+                    color_options = {
+                        "Red": "#FF6C6C",
+                        "Orange": "#FFBD45",
+                        "Green": "#4CAF50",
+                        "Blue": "#2196F3",
+                        "Purple": "#9C27B0"
                     }
+                    color_name = st.selectbox("Pick a color", list(color_options.keys()))
+                    color = color_options[color_name]
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        start_time = st.text_input("Start Time", value=selected["start"].split("T")[1][:5] if "T" in selected["start"] else "00:00")
+                    with col2:
+                        end_time = st.text_input("End Time", value=selected["end"].split("T")[1][:5] if "T" in selected["end"] else "00:00")
+                else:
+                    color = "#FFFFFF"
+                
+                # Label selection for new events
+                label_options = ["Event", "Entry"]
+                if st.session_state.new_label:
+                    label_options.insert(1, st.session_state.new_label)
+                
+                label = st.selectbox(
+                    "Label",
+                    label_options + ["Add new label..."],
+                    index=0
+                )
+                
+                if label == "Add new label...":
+                    new_label = st.text_input("New label name", key="new_label_input_add")
+                    if new_label:
+                        st.session_state.new_label = new_label
+                        st.rerun()
+                    label = st.session_state.new_label
+                
+                details = st.text_area("Details")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    add_clicked = st.form_submit_button("Add")
+                with col2:
+                    cancel_clicked = st.form_submit_button("Cancel")
+                
+                if add_clicked:
+                    if event_type == "Regular Event":
+                        new_event = {
+                            "id": str(uuid.uuid4()),
+                            "title": title,
+                            "start": f"{selected['start'].split('T')[0]}T{start_time}:00",
+                            "end": f"{selected['end'].split('T')[0]}T{end_time}:00",
+                            "color": color,
+                            "label": label,
+                            "details": details
+                        }
+                    else:
+                        new_event = {
+                            "id": str(uuid.uuid4()),
+                            "title": title,
+                            "start": datetime.now().isoformat(),
+                            "end": datetime.now().isoformat(),
+                            "color": color,
+                            "label": "Entry",
+                            "details": details,
+                            "className": "fc-entry-event"
+                        }
+                    
                     st.session_state.calendar_events.append(new_event)
+                    st.rerun()
+                
+                if cancel_clicked:
                     st.rerun()
     
 
