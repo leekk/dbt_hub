@@ -8,6 +8,9 @@ import json
 import os
 from huggingface_hub import InferenceClient
 from streamlit_calendar import calendar
+from datetime import datetime
+import uuid
+
 
 # -------------------- TRYNG AI HERE --------------------
 os.environ["HF_TOKEN"] = st.secrets['HF_TOKEN']
