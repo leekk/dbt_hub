@@ -114,7 +114,7 @@ with tab1:
     if "new_label" not in st.session_state:
         st.session_state.new_label = ""
 
-    # Calendar config
+    # Calendar config (unchanged)
     calendar_options = {
         "editable": True,
         "selectable": True,
@@ -122,7 +122,7 @@ with tab1:
         "selectHelper": True,
         "selectOverlap": True,
         "slotDuration": "00:15:00",
-        "slotMinTime": " ",
+        "slotMinTime": "00:00:00",
         "slotMaxTime": "24:00:00",
         "dateClick": True,
         "headerToolbar": {
@@ -190,7 +190,7 @@ with tab1:
                 (e for e in st.session_state.calendar_events if e["id"] == clicked_event["id"]),
                 None
             )
-            st.rerun()
+            st.experimental_rerun() 
 
         # Edit form
         if st.session_state.editing_event_id:
@@ -312,11 +312,12 @@ with tab1:
                     
                     col1, col2 = st.columns(2)
                     with col1:
-                        start_time = st.text_input("Start Time", value=pd.to_datetime(selected["start"]).strftime("%H:%M") if "T" in selected["start"] else "00:00")
+                        start_time = st.text_input("Start Time", value=selected["start"].split("T")[1][:5] if "T" in selected["start"] else "00:00")
                     with col2:
-                        end_time = st.text_input("End Time", value=pd.to_datetime(selected["end"]).strftime("%H:%M") if "T" in selected["end"] else "00:00")
+                        end_time = st.text_input("End Time", value=selected["end"].split("T")[1][:5] if "T" in selected["end"] else "00:00")
                 else:
                     color = "#FFFFFF"
+                    start_time = st.text_input("Start Time", value=selected["start"].split("T")[1][:5] if "T" in selected["start"] else "00:00")
                 
                 # Label selection for new events
                 label_options = ["Event", "Entry"]
@@ -360,24 +361,22 @@ with tab1:
                                 "details": details
                             }
                             st.session_state.calendar_events.append(new_event)
-                            st.rerun()
+                            st.experimental_rerun()
                         except ValueError:
                             st.error("Please enter time in HH:MM format")
                     else:  # Entry
-                        now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+                        now = datetime.now(pytz.utc)  # Get current time in UTC
                         new_event = {
                             "id": str(uuid.uuid4()),
                             "title": title,
-                            "start": now,
-                            "end": now,
+                            "start": now.isoformat(),
+                            "end": now.isoformat(),
                             "color": "#FFFFFF",
                             "label": "Entry",
                             "details": details,
                             "className": "fc-entry-event"
                         }
-                        st.session_state.calendar_events.append(new_event)
-                        st.rerun()
-                
+                        
                 if cancel_clicked:
                     st.rerun()
     
@@ -476,5 +475,6 @@ with st.sidebar:
 #    unsafe_allow_html=True
 #)
 # -------------------- CALENDAR N STUFF --------------------
+
 
 
