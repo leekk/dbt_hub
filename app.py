@@ -448,13 +448,15 @@ with tab4:
 
 # -------------------- SIDEBAR --------------------
 with st.sidebar:
-    st.header("DBT Skills Quick Access")
-    with st.expander("Mindfulness Exercises"):
-        st.write("1. 5-4-3-2-1 Grounding Technique...")
+    st.header("DBT Notes")
+    with st.expander("Mindfulness"):
+        st.write(""" mindfullness of current emotions: experiencing emotions without 
+        necessarily acting on them => you can experience them without falling apart""")
     with st.expander("Distress Tolerance"):
         st.write("TIPP Skill: Temperature, Intense exercise...")
         
-    col_main, col_right = st.columns([4, 1])  # main content left, "sidebar" right
+    col_main, col_right = st.columns([2, 1])
+    # the nums were previously 4, 1, I want to see if the nums change the dimensions
 
     with col_main:
         st.markdown("### Main Content Area")
