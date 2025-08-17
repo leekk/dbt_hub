@@ -166,6 +166,7 @@ with tab1:
         )
 
     with col2:
+        st.subheader("Logs")
         # Reset states when needed
         if st.session_state.get("reset_calendar"):
             st.session_state.calendar_key += 1
@@ -448,24 +449,29 @@ with tab4:
 
 # -------------------- SIDEBAR --------------------
 with st.sidebar:
-    st.header("DBT Notes")
+    st.header("Quick Access")
+    st.button("Chain Analysis")
+    st.button("Opposite Action")
+    st.subheader("DBT notes")
     with st.expander("Mindfulness"):
         st.write(""" mindfullness of current emotions: experiencing emotions without 
         necessarily acting on them => you can experience them without falling apart""")
+
     with st.expander("Distress Tolerance"):
         st.write("TIPP Skill: Temperature, Intense exercise...")
+    
         
     col_main, col_right = st.columns([2, 1])
     # the nums were previously 4, 1, I want to see if the nums change the dimensions
 
-    with col_main:
-        st.markdown("### Main Content Area")
-        st.write("This is your regular app content.")
+    #with col_main:
+    #    st.markdown("### Main Content Area")
+    #    st.write("This is your regular app content.")
 
-    with col_right:
-        st.markdown("### 🛠️ Tools")
-        st.button("Action")
-        st.markdown("Tip: Breathe in for 4 seconds...")
+    #with col_right:
+    #    st.markdown("### 🛠️ Tools")
+    #    st.button("Action")
+    #    st.markdown("Tip: Breathe in for 4 seconds...")
 
 
 # -------------------- UI EXTRA(TESTING BGS) --------------------
